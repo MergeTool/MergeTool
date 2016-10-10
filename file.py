@@ -21,27 +21,25 @@ def conflictServe(list, first):
     for i in range(len(obj[1])):
         print(obj[1][i][0:len(obj[1][i])-1])
     response = input("Choose what to leave ('R' = right, 'L' = left, 'B' = both, 'N' = next conflict, 'P' = previous conflict"
-                     + " 'C' = compile, 'M' = merge): \n")
-                     if (response[0] == 'R') | (response[0] == 'r'):
-                         bits_of_file[first * 2 + 1] = obj[1]
-                             flag1 = True
-elif (response[0] == 'L') | (response[0] == 'l'):
-    bits_of_file[first * 2 + 1] = obj[0]
+                     + " 'C' = compile): \n")
+    if (response[0] == 'R') | (response[0] == 'r'):
+        bits_of_file[first * 2 + 1] = obj[1]
+        flag1 = True
+    elif (response[0] == 'L') | (response[0] == 'l'):
+        bits_of_file[first * 2 + 1] = obj[0]
         flag1 = True
     elif (response[0] == 'B') | (response[0] == 'b'):
         new = obj[0]
         new.expand(obj[1])
         bits_of_file[first * 2 + 1] = new
         flag1 = True
-if (response[0] == 'P') | (response[0] == 'p'):
-    flag1 = True
+    if (response[0] == 'P') | (response[0] == 'p'):
+        flag1 = True
     elif (response[0] == 'N') | (response[0] == 'n'):
         flag1 = False
-elif (response[0] == 'C') | (response[0] == 'c'):
-    compilate()
+    elif (response[0] == 'C') | (response[0] == 'c'):
+        compilate()
         stop = True
-    # elif (response[0] == 'M') | (response[0] == 'm'):
-    # merge(bits_of_file)
     if stop == False:
         if flag1 == True:
             if first + 1 != len(list):
