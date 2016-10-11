@@ -37,13 +37,13 @@ int main()
          }
       }
 <<<<<<< HEAD
-       status = 0;
-       printf("left");
-       c = 5;
+      status = 0;
+      printf("left");
+      c = 5;
 =======
-       status = 0;
-       printf("right");
-       c = 7;
+      status = 0;
+      printf("right");
+      c = 7;
 >>>>>>> master
       if ( status != 0 )
       {
