@@ -54,7 +54,7 @@ def combined_file(file_bits: [FileBit], conflicts: [Conflict]) -> str:
 
 
 def compile_text(program: str):
-    buf_path = 'code.cpp'
+    buf_path = '~buffer.cpp'
 
     buf = open(buf_path, 'w')
     buf.write(program)
