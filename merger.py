@@ -54,10 +54,14 @@ def combined_file(file_bits: [FileBit], conflicts: [Conflict]) -> str:
 
 
 def compile(file_bits: [FileBit], conflicts: [Conflict]):
-    fout = open('code.cpp', 'w')
-    fout.write(combined_file(file_bits, conflicts))
-    fout.close()
-    subprocess.check_output(["g++", "code.cpp"])
+    buf_path = 'code.cpp'
+
+    buf = open(buf_path, 'w')
+    buf.write(combined_file(file_bits, conflicts))
+    buf.close()
+
+    out = subprocess.check_output(["g++", buf_path])
+    print(out)
 
 
 def parse_stream_into_conflicts(stream) -> ([FileBit], [Conflict]):
@@ -119,6 +123,7 @@ def resolve_conflicts_event_loop(file_bits: [FileBit], conflicts: [Conflict]):
     while True:
         if not unresolved_conflicts:
             print("All conflicts have been resolved")
+            compile(file_bits, conflicts)
             break
 
         unresolved_conflict_index %= len(unresolved_conflicts)
@@ -152,7 +157,7 @@ def resolve_conflicts_event_loop(file_bits: [FileBit], conflicts: [Conflict]):
         elif switch == 'n':
             unresolved_conflict_index += 1
         elif switch == 'c':
-            compile(file_bits, conflict)
+            compile(file_bits, conflicts)
         elif switch == 'q':
             print("Left unresolved %d conflicts" % len(unresolved_conflicts))
             break
