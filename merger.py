@@ -46,22 +46,33 @@ def combined_file(file_bits: [FileBit], conflicts: [Conflict]) -> str:
     bits = []
     for i in range(len(file_bits) + len(conflicts)):
         if i % 2 == 0:
-            bits += file_bits.pop(0).text
+            bits += _file_bits.pop(0).text
         else:
-            bits += conflicts.pop(0).result()
+            bits += _conflicts.pop(0).result()
 
     return "".join(bits)
 
 
-def compile(file_bits: [FileBit], conflicts: [Conflict]):
+def compile_text(program: str):
     buf_path = 'code.cpp'
 
     buf = open(buf_path, 'w')
-    buf.write(combined_file(file_bits, conflicts))
+    buf.write(program)
     buf.close()
 
-    out = subprocess.check_output(["g++", buf_path])
-    print(out)
+    try:
+        # out, err = subprocess.check_output(["g++", buf_path])
+
+        compiler = subprocess.Popen(["g++", buf_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        out, err = compiler.communicate()
+        print(out.decode())
+        print(err.decode())
+
+        if not err:
+            print("The code has been compiled with no errors")
+
+    except subprocess.CalledProcessError:
+        print("Compiler terminated unexpectedly")
 
 
 def parse_stream_into_conflicts(stream) -> ([FileBit], [Conflict]):
@@ -123,7 +134,7 @@ def resolve_conflicts_event_loop(file_bits: [FileBit], conflicts: [Conflict]):
     while True:
         if not unresolved_conflicts:
             print("All conflicts have been resolved")
-            compile(file_bits, conflicts)
+            compile_text(combined_file(file_bits, conflicts))
             break
 
         unresolved_conflict_index %= len(unresolved_conflicts)
@@ -137,6 +148,9 @@ def resolve_conflicts_event_loop(file_bits: [FileBit], conflicts: [Conflict]):
         response = input(
             "Choose what to leave ('R' = right, 'L' = left, 'B' = both, "
             "'N' = next conflict, 'P' = previous conflict 'C' = compile, 'Q' = quit): \n")
+
+        if not response:
+            continue
 
         switch = response.lower()[0]
 
@@ -157,7 +171,7 @@ def resolve_conflicts_event_loop(file_bits: [FileBit], conflicts: [Conflict]):
         elif switch == 'n':
             unresolved_conflict_index += 1
         elif switch == 'c':
-            compile(file_bits, conflicts)
+            compile_text(combined_file(file_bits, conflicts))
         elif switch == 'q':
             print("Left unresolved %d conflicts" % len(unresolved_conflicts))
             break
@@ -200,5 +214,7 @@ if __name__ == "__main__":
 
     result = combined_file(File_bits, Conflicts)
     print(result)
+
+    compile_text(result)
 
 
