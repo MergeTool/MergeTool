@@ -43,7 +43,7 @@ int main()
 >>>>>>> master
          }
       }
-      printf("hello, world!")
+      printf("hello, world!");
 <<<<<<< HEAD
       status = 0;
       printf("left");
