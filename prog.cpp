@@ -12,8 +12,12 @@ int main()
    cout << "Enter the number of prime numbers to print\n";
 <<<<<<< HEAD
    cin >> n;
+   n += 1;
+   printf("left");
 =======
    scanf("%d", &n);
+   n -= 1;
+   printf("right");
 >>>>>>> master
  
    if ( n >= 1 )
@@ -32,6 +36,15 @@ int main()
             break;
          }
       }
+<<<<<<< HEAD
+       status = 0;
+       printf("left");
+       c = 5;
+=======
+       status = 0;
+       printf("right");
+       c = 7;
+>>>>>>> master
       if ( status != 0 )
       {
          cout << num << endl;
