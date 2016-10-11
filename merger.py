@@ -1,22 +1,37 @@
+#!/usr/bin/env python3
+import argparse
 import subprocess
 from enum import Enum
 
 
 class Conflict:
-    def __init__(self, line_number: int, left: str, right: str):
+    def __init__(self, line_number: int, left: str, right: str,
+                 sep1: str = '<<<\n', sep2: str = '===\n', sep3: str = '>>>\n'):
+
         self.line_number = line_number
         self.left = left
         self.right = right
-        self.select = None
+
+        self.sep1 = sep1
+        self.sep2 = sep2
+        self.sep3 = sep3
+
+        self._select = None
 
     def select_left(self):
-        self.select = self.left
+        self._select = self.left
 
     def select_right(self):
-        self.select = self.right
+        self._select = self.right
 
     def select_both(self):
-        self.select = self.left + self.right
+        self._select = self.left + self.right
+
+    def result(self) -> str:
+        if self._select:
+            return self._select
+        else:
+            return self.sep1 + self.left + self.sep2 + self.right + self.sep3
 
 
 class FileBit:
@@ -33,12 +48,12 @@ def combined_file(file_bits: [FileBit], conflicts: [Conflict]) -> str:
         if i % 2 == 0:
             bits += file_bits.pop(0).text
         else:
-            bits += conflicts.pop(0).select
+            bits += conflicts.pop(0).result()
 
     return "".join(bits)
 
 
-def compilate(file_bits: [FileBit], conflicts: [Conflict]):
+def compile(file_bits: [FileBit], conflicts: [Conflict]):
     fout = open('code.cpp', 'w')
     fout.write(combined_file(file_bits, conflicts))
     fout.close()
@@ -68,18 +83,21 @@ def parse_stream_into_conflicts(stream) -> ([FileBit], [Conflict]):
                 file_bits.append(file_bit)
                 file_bit = FileBit(0, "")
                 conflict.line_number = index
+                conflict.sep1 = line
             else:
                 file_bit.text += line
 
         elif State.left == state:
             if switch == "===":
                 state = State.right
+                conflict.sep2 = line
             else:
                 conflict.left += line
 
         elif State.right == state:
             if switch == ">>>":
                 state = State.text
+                conflict.sep3 = line
                 conflicts.append(conflict)
                 conflict = Conflict(-1, "", "")
                 file_bit.line_number = index + 1
@@ -134,7 +152,7 @@ def resolve_conflicts_event_loop(file_bits: [FileBit], conflicts: [Conflict]):
         elif switch == 'n':
             unresolved_conflict_index += 1
         elif switch == 'c':
-            compilate(file_bits, conflict)
+            compile(file_bits, conflict)
         elif switch == 'q':
             print("Left unresolved %d conflicts" % len(unresolved_conflicts))
             break
@@ -142,15 +160,40 @@ def resolve_conflicts_event_loop(file_bits: [FileBit], conflicts: [Conflict]):
             continue
 
 
-file_stream = open('prog.cpp', 'r', encoding="latin-1")
+def parse_cli_args():
+    parser = argparse.ArgumentParser(description='Resolves conflicts in a file')
 
-File_bits, Conflicts = parse_stream_into_conflicts(file_stream)
+    parser.add_argument('file', default='prog.cpp', help='file to resolve')
+    parser.add_argument('--verbose', dest='verbose', action='store_true')
 
-# conflictServe(conflicts_list, 0)
+    defaul_behaviour_group = parser.add_mutually_exclusive_group()
+    defaul_behaviour_group.add_argument('-ours', action='store_true')
+    defaul_behaviour_group.add_argument('-theirs', action='store_true')
+    defaul_behaviour_group.add_argument('-union', action='store_true')
 
-resolve_conflicts_event_loop(File_bits, Conflicts)
+    return parser.parse_args()
 
-result = combined_file(File_bits, Conflicts)
-print(result)
+
+if __name__ == "__main__":
+    args = parse_cli_args()
+
+    file_stream = open(args.file, 'r', encoding="latin-1")
+
+    File_bits, Conflicts = parse_stream_into_conflicts(file_stream)
+
+    if args.ours:
+        for conflict in Conflicts:
+            conflict.select_left()
+    elif args.theirs:
+        for conflict in Conflicts:
+            conflict.select_right()
+    elif args.union:
+        for conflict in Conflicts:
+            conflict.select_both()
+    else:
+        resolve_conflicts_event_loop(File_bits, Conflicts)
+
+    result = combined_file(File_bits, Conflicts)
+    print(result)
 
 
