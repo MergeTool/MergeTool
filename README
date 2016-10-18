@@ -1,1 +1,2 @@
 To install MergeTool in your system you have to execute merger_bash_helper.sh bash script in your terminal.
+usage: mergetool [-h] [--verbose] [-ours | -theirs | -union] file
