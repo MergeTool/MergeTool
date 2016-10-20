@@ -24,23 +24,28 @@ class ProjectMerge:
         for file in self.files:
             file.select_all(choice)
 
-    def write_result(self):
-        if self.tmp_path.exists():
-            if self.tmp_path.is_dir():
-                shutil.rmtree(str(self.tmp_path))
-            else:
-                raise ValueError("`tmp_path` is supposed to be a directory (if exists)", self.tmp_path)
+    def write_result_tmp(self):
+        if self.tmp_path.exists() and not self.tmp_path.is_dir():
+            raise ValueError("`tmp_path` is supposed to be a directory (if exists)", self.tmp_path)
 
-        self.tmp_path.mkdir()
+        self.write_result(self.tmp_path)
+
+    def write_result(self, buf_path: Path):
+        if buf_path.exists():
+            if buf_path.is_dir():
+                shutil.rmtree(str(buf_path))
+            else:
+                buf_path.unlink()
+
+        buf_path.mkdir()
 
         for file in self.files:
             relative_path = file.path.relative_to(self.path)
-            path = self.tmp_path / relative_path
-
+            path = buf_path / relative_path
             path.write_text(file.result(), encoding="latin-1")
 
     def compile_print(self):
-        self.write_result()
+        self.write_result_tmp()
 
         try:
             # out, err = subprocess.check_output(["g++", buf_path])
@@ -56,7 +61,6 @@ class ProjectMerge:
 
         except subprocess.CalledProcessError:
             print("Make terminated unexpectedly")
-
 
     @staticmethod
     def parse(path: Path, tmp_path: Path):  # -> ProjectMerge:
