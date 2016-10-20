@@ -7,60 +7,62 @@ from merge.project_merge import ProjectMerge
 
 
 ### changes `conflicts`
-def resolve_conflicts_event_loop(project_merge: ProjectMerge, file_merge_index: int):
-    file_merge = project_merge.files[file_merge_index]
+def resolve_conflicts_event_loop(project_merge: ProjectMerge):
+    # file_index = 0
+    # file_merge = project_merge.files[file_index]
+    for file_merge in project_merge.files:
 
-    if file_merge.is_resolved():
-        return
-
-    unresolved_conflicts = list(range(len(file_merge.conflicts)))
-    unresolved_conflict_index = 0
-    while True:
-        if not unresolved_conflicts:
-            print("All conflicts have been resolved")
-            project_merge.compile_print()
-            break
-
-        unresolved_conflict_index %= len(unresolved_conflicts)
-        conflict = file_merge.conflicts[unresolved_conflicts[unresolved_conflict_index]]
-
-        print("\n left = ")
-        print(conflict.left)
-        print("\n right = ")
-        print(conflict.right)
-
-        response = input(
-            "Choose what to leave ('R' = right, 'L' = left, 'B' = both, "
-            "'N' = next conflict, 'P' = previous conflict 'C' = compile, 'Q' = quit): \n")
-
-        if not response:
+        if file_merge.is_resolved():
             continue
 
-        switch = response.lower()[0]
+        unresolved_conflicts = list(range(len(file_merge.conflicts)))
+        unresolved_conflict_index = 0
+        while True:
+            if not unresolved_conflicts:
+                print("All conflicts have been resolved")
+                project_merge.compile_print()
+                break
 
-        if switch == 'l':
-            conflict.select(Choice.left)
-            unresolved_conflicts.pop(unresolved_conflict_index)
-            unresolved_conflict_index += 1
-        elif switch == 'r':
-            conflict.select(Choice.right)
-            unresolved_conflicts.pop(unresolved_conflict_index)
-            unresolved_conflict_index += 1
-        elif switch == 'b':
-            conflict.select(Choice.both)
-            unresolved_conflicts.pop(unresolved_conflict_index)
-            unresolved_conflict_index += 1
-        elif switch == 'p':
-            unresolved_conflict_index -= 1
-        elif switch == 'n':
-            unresolved_conflict_index += 1
-        elif switch == 'c':
-            project_merge.compile_print()
-        elif switch == 'q':
-            print("Left unresolved %d conflicts" % len(unresolved_conflicts))
-            break
-        else:
-            continue
+            unresolved_conflict_index %= len(unresolved_conflicts)
+            conflict = file_merge.conflicts[unresolved_conflicts[unresolved_conflict_index]]
+
+            print("\n left = ")
+            print(conflict.left)
+            print("\n right = ")
+            print(conflict.right)
+
+            response = input(
+                "Choose what to leave ('R' = right, 'L' = left, 'B' = both, "
+                "'N' = next conflict, 'P' = previous conflict 'C' = compile, 'Q' = quit): \n")
+
+            if not response:
+                continue
+
+            switch = response.lower()[0]
+
+            if switch == 'l':
+                conflict.select(Choice.left)
+                unresolved_conflicts.pop(unresolved_conflict_index)
+                unresolved_conflict_index += 1
+            elif switch == 'r':
+                conflict.select(Choice.right)
+                unresolved_conflicts.pop(unresolved_conflict_index)
+                unresolved_conflict_index += 1
+            elif switch == 'b':
+                conflict.select(Choice.both)
+                unresolved_conflicts.pop(unresolved_conflict_index)
+                unresolved_conflict_index += 1
+            elif switch == 'p':
+                unresolved_conflict_index -= 1
+            elif switch == 'n':
+                unresolved_conflict_index += 1
+            elif switch == 'c':
+                project_merge.compile_print()
+            elif switch == 'q':
+                print("Left unresolved %d conflicts" % len(unresolved_conflicts))
+                return
+            else:
+                continue
 
 
 def parse_cli_args():
@@ -115,8 +117,6 @@ if __name__ == "__main__":
 
     merge.select_all(args.choice)
 
-    # TODO: incapsulate
-    for index in range(len(merge.files)):
-        resolve_conflicts_event_loop(merge, index)  # changes `merge`
+    resolve_conflicts_event_loop(merge)  # changes `merge`
 
     merge.compile_print()
