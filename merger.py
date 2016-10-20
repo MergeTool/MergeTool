@@ -12,22 +12,20 @@ from ui.index import Index
 
 def resolve_conflicts_event_loop(project_merge: ProjectMerge):
     files = Index(project_merge.files)
-
-    if files.is_empty():
-        print("Project %s has no files to merge" % project_merge.path)
-        return
-
-    conflicts = Index(files.value().conflicts)
+    conflicts = None
 
     while True:
         if files.is_empty():
             print("Project %s has no files to merge" % project_merge.path)
             return
 
+        if not conflicts:
+            conflicts = Index(files.value().conflicts)
+
         if conflicts.is_empty():
             print("File %s has no conflicts to resolve" % files.value().path)
             files.delete()
-            conflicts = Index(files.value().conflicts)
+            conflicts = None
             continue
 
         print("\n left = ")
