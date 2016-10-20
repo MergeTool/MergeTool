@@ -2,7 +2,8 @@
 import argparse
 from pathlib import Path
 
-from merge.ProjectMerge import ProjectMerge
+from merge.choice import Choice
+from merge.project_merge import ProjectMerge
 
 
 ### changes `conflicts`
@@ -38,15 +39,15 @@ def resolve_conflicts_event_loop(project_merge: ProjectMerge, file_merge_index: 
         switch = response.lower()[0]
 
         if switch == 'l':
-            conflict.select_left()
+            conflict.select(Choice.left)
             unresolved_conflicts.pop(unresolved_conflict_index)
             unresolved_conflict_index += 1
         elif switch == 'r':
-            conflict.select_right()
+            conflict.select(Choice.right)
             unresolved_conflicts.pop(unresolved_conflict_index)
             unresolved_conflict_index += 1
         elif switch == 'b':
-            conflict.select_both()
+            conflict.select(Choice.both)
             unresolved_conflicts.pop(unresolved_conflict_index)
             unresolved_conflict_index += 1
         elif switch == 'p':
@@ -73,7 +74,18 @@ def parse_cli_args():
     defaul_behaviour_group.add_argument('-theirs', action='store_true')
     defaul_behaviour_group.add_argument('-union', action='store_true')
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.ours:
+        args.choice = Choice.left
+    elif args.theirs:
+        args.choice = Choice.right
+    if args.union:
+        args.choice = Choice.both
+    else:
+        args.choice = Choice.undesided
+
+    return args
 
 
 if __name__ == "__main__":
@@ -100,6 +112,8 @@ if __name__ == "__main__":
     if [f for f in merge.files if f.path == makefile_path and not f.is_resolved()]:
         print("Makefile cannot be in the merging state")
         quit()
+
+    merge.select_all(args.choice)
 
     # TODO: incapsulate
     for index in range(len(merge.files)):

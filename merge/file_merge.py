@@ -1,8 +1,13 @@
 from enum import Enum
 from pathlib import Path
 
-from merge.Conflict import Conflict
-from merge.FileBit import FileBit
+from .choice import Choice
+from .conflict import Conflict
+from .file_bit import FileBit
+
+
+class FileMergeChoice:
+    pass
 
 
 class FileMerge:
@@ -14,17 +19,9 @@ class FileMerge:
     def is_resolved(self):
         return len([c for c in self.conflicts if not c.is_resolved()]) == 0
 
-    def select_all_left(self):
+    def select_all(self, choice: Choice):
         for conflict in self.conflicts:
-            conflict.select_left()
-
-    def select_all_right(self):
-        for conflict in self.conflicts:
-            conflict.select_right()
-
-    def select_all_both(self):
-        for conflict in self.conflicts:
-            conflict.select_both()
+            conflict.select(choice)
 
     def result(self) -> str:
         _file_bits = self.file_bits[:]

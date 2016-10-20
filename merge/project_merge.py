@@ -3,7 +3,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-from merge.FileMerge import FileMerge
+from .choice import Choice
+from .file_merge import FileMerge
+
+
+class ProjectMergeChoise:
+    pass
 
 
 class ProjectMerge:
@@ -15,17 +20,9 @@ class ProjectMerge:
     def is_resolved(self):
         return len([f for f in self.files if not f.is_resolved()]) == 0
 
-    def select_all_left(self):
+    def select_all(self, choice: Choice):
         for file in self.files:
-            file.select_all_left()
-
-    def select_all_right(self):
-        for file in self.files:
-            file.select_all_right()
-
-    def select_all_both(self):
-        for file in self.files:
-            file.select_all_both()
+            file.select_all(choice)
 
     def write_result(self):
         if self.tmp_path.exists():
@@ -68,5 +65,3 @@ class ProjectMerge:
             merges.append(FileMerge.parse(file))
 
         return ProjectMerge(path, tmp_path, merges)
-
-
