@@ -4,7 +4,7 @@ from ui.index import Index
 
 
 def resolve_conflicts_event_loop(project_merge: ProjectMerge):
-    files = Index(project_merge.files)
+    files = Index([f for f in project_merge.files if not f.is_resolved()])
     conflicts = None
 
     while True:
@@ -13,7 +13,7 @@ def resolve_conflicts_event_loop(project_merge: ProjectMerge):
             return
 
         if not conflicts:
-            conflicts = Index(files.value().conflicts)
+            conflicts = Index([c for c in files.value().conflicts if not c.is_resolved()])
 
         if conflicts.is_empty():
             print("File %s has no conflicts to resolve" % files.value().path)
