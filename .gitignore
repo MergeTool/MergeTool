@@ -1,0 +1,11 @@
+# project structure
+.idea/
+
+
+# python
+__pycache__
+
+
+# tmp files
+~testproject/
+unitTestDir/
