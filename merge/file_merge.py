@@ -39,8 +39,9 @@ class FileMerge:
     def parse(path: Path):  # -> FileMerge:
         class State(Enum):
             text = 1
-            left = 2
-            right = 3
+            base = 2
+            left = 3
+            right = 4
 
         stream = path.open('r', encoding="latin-1")
 
@@ -53,10 +54,13 @@ class FileMerge:
         conflict = Conflict(-1, "", "")
 
         for index, line in enumerate(fileobj_lines):
-            switch = line[0:3]
+            switch = line[0:7]
+            
 
+#reason for the changes explained here:
+#https://jira.mipt.parallels.ru/confluence/display/SYM/How+conflicts+are+presented
             if State.text == state:
-                if switch == "<<<":
+                if switch == "<<<<<<<":
                     state = State.left
                     file_bits.append(file_bit)
                     file_bit = FileBit(0, "")
@@ -66,16 +70,27 @@ class FileMerge:
                     file_bit.text += line
 
             elif State.left == state:
-                if switch == "===":
-                    state = State.right
+                if switch == "|||||||":
+                    state = State.base
                     conflict.sep2 = line
+                elif switch == "=======":
+                    state = State.right
+                    conflict.sep2 = "\n"
+                    conflict.sep3 = line
                 else:
                     conflict.left += line
+    
+            elif State.base == state:
+                if switch == "=======":
+                    state = State.right
+                    conflict.sep3 = line
+                else:
+                    conflict.base += line
 
             elif State.right == state:
-                if switch == ">>>":
+                if switch == ">>>>>>>":
                     state = State.text
-                    conflict.sep3 = line
+                    conflict.sep4 = line
                     conflicts.append(conflict)
                     conflict = Conflict(-1, "", "")
                     file_bit.line_number = index + 1

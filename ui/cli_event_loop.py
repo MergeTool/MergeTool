@@ -59,6 +59,9 @@ def resolve_conflicts_event_loop(project_merge: ProjectMerge):
             print(conflicts.value().left)
             print("\n right = ")
             print(conflicts.value().right)
+            if ("" != conflicts.value().base):
+                print("\n base = ")
+                print(conflicts.value().base))
 
             response = input(
                 "Choose what to leave ('L' = left, 'R' = right, 'B' = both, "

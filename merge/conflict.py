@@ -2,16 +2,19 @@ from .choice import Choice
 
 
 class Conflict:
-    def __init__(self, line_number: int, left: str, right: str,
-                 sep1: str = '<<<\n', sep2: str = '===\n', sep3: str = '>>>\n'):
+    def __init__(self, line_number: int, left: str, right: str, base: str = "",
+                 sep1: str = '<<<<<<<\n', sep2: str = '|||||||\n', sep3: str = '=======\n',
+                 sep4: str = '>>>>>>>\n'):
 
         self.line_number = line_number
         self.left = left
         self.right = right
+        self.base = base
 
         self.sep1 = sep1
         self.sep2 = sep2
         self.sep3 = sep3
+        self.sep4 = sep4
 
         self._select = None
         self.choice = Choice.undesided
@@ -24,7 +27,10 @@ class Conflict:
 
     def result(self) -> str:
         if self.choice is Choice.undesided:
-            return self.sep1 + self.left + self.sep2 + self.right + self.sep3
+            if "" != self.base:
+                return self.sep1 + self.left + self.sep2 + self.base + self.sep3 + self.right + self.sep4
+            else:
+                return self.sep1 + self.left + self.sep3 + self.right + self.sep4
         elif self.choice is Choice.left:
             return self.left
         elif self.choice is Choice.right:
