@@ -1,2 +1,14 @@
 To install MergeTool in your system you have to execute merger_bash_helper.sh bash script in your terminal.
-usage: mergetool [-h] [--verbose] [-ours | -theirs | -union] file
+usage: merger.py [-h] [--verbose] [-ours | -theirs | -union] project_path
+
+Resolves conflicts in a file
+
+positional arguments:
+  project_path  folder with the top-level Makefile
+
+optional arguments:
+  -h, --help    show this help message and exit
+  --verbose
+  -ours
+  -theirs
+  -union

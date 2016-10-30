@@ -21,16 +21,20 @@ class Conflict:
 
     def is_resolved(self) -> bool:
         return self.choice.is_resolved()
+    
+    def hasBase(self)-> bool:
+        while self.base != (self.base.lstrip().lstrip("\n")):
+            self.base = self.base.lstrip().lstrip("\n")
+        return "" != self.base
 
     def select(self, choice: Choice):
         self.choice = choice
 
     def result(self) -> str:
         if self.choice is Choice.undesided:
-            if "" != self.base:
-                return self.sep1 + self.left + self.sep2 + self.base + self.sep3 + self.right + self.sep4
-            else:
-                return self.sep1 + self.left + self.sep3 + self.right + self.sep4
+            return self.sep1 + self.left + self.sep2 + self.base \
+                   + self.sep3 + self.right + self.sep4 if self.hasBase() else self.sep1 \
+                   + self.left + self.sep3 + self.right + self.sep4
         elif self.choice is Choice.left:
             return self.left
         elif self.choice is Choice.right:

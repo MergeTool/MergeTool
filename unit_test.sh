@@ -1,14 +1,14 @@
 #setting up a new local git repository with two branches - master and new-branch
-mkdir unitTestDir
-cd unitTestDir
+mkdir unit_test_dir
+cd unit_test_dir
 git init
 
-touch unitTestProg.cpp
+touch unit_test_prog.cpp
 git add .
 git commit -m "This is a commit no doubt"
 
 git checkout -b new-branch
-cat <<EOF > unitTestProg.cpp
+cat <<EOF > unit_test_prog.cpp
 #include<iostream>
 #include<cmath>
 #include<cstdio>
@@ -61,7 +61,7 @@ git add .
 git commit -m "This is smth completely different"
 
 git checkout master
-cat <<EOF > unitTestProg.cpp
+cat <<EOF > unit_test_prog.cpp
 #include<iostream>
 #include<cmath>
 #include<cstdio>
@@ -117,7 +117,7 @@ git commit -m "This is smth else entirely"
 #merging with conflicts
 git merge new-branch
 #resolving conflicts with mergetool
-python3 /usr/local/bin/merger.py -ours unitTestProg.cpp
+python3 /usr/local/bin/mergetool/merger.py unit_test_prog.cpp
 
 
 
