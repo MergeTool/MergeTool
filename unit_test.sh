@@ -125,7 +125,6 @@ git commit -m "This is smth else entirely"
 git merge new-branch
 #resolving conflicts with mergetool
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-echo "lalalalala $DIR \n"
 python3 /usr/local/bin/mergetool/merger.py $DIR
 
 
