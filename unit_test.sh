@@ -4,6 +4,13 @@ cd unit_test_dir
 git init
 
 touch unit_test_prog.cpp
+
+touch Makefile
+cat <<EOF > Makefile
+prog: unit_test_prog.cpp
+    g++ unit_test_prog.cpp
+EOF
+
 git add .
 git commit -m "This is a commit no doubt"
 
@@ -117,7 +124,9 @@ git commit -m "This is smth else entirely"
 #merging with conflicts
 git merge new-branch
 #resolving conflicts with mergetool
-python3 /usr/local/bin/mergetool/merger.py unit_test_prog.cpp
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo "lalalalala $DIR \n"
+python3 /usr/local/bin/mergetool/merger.py $DIR
 
 
 
