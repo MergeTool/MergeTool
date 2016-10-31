@@ -22,14 +22,16 @@ class Conflict:
     def select(self, choice: Choice):
         self.choice = choice
 
-    def result(self) -> str:
-        if self.choice is Choice.undesided:
+    def result(self, choice: Choice = None) -> str:
+        _choice = self.choice if not choice else choice
+
+        if _choice is Choice.undesided:
             return self.sep1 + self.left + self.sep2 + self.right + self.sep3
-        elif self.choice is Choice.left:
+        elif _choice is Choice.left:
             return self.left
-        elif self.choice is Choice.right:
+        elif _choice is Choice.right:
             return self.right
-        elif self.choice is Choice.both:
+        elif _choice is Choice.both:
             return self.left + self.right
         else:
             raise ValueError

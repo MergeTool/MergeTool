@@ -1,6 +1,8 @@
 from enum import Enum
 from pathlib import Path
 
+from clang.cindex import TranslationUnit, Index, TranslationUnitLoadError
+
 from .choice import Choice
 from .conflict import Conflict
 from .file_bit import FileBit
@@ -23,7 +25,7 @@ class FileMerge:
         for conflict in self.conflicts:
             conflict.select(choice)
 
-    def result(self) -> str:
+    def result(self, choice: Choice = None) -> str:
         _file_bits = self.file_bits[:]
         _conflicts = self.conflicts[:]
         bits = []
@@ -31,9 +33,21 @@ class FileMerge:
             if i % 2 == 0:
                 bits += _file_bits.pop(0).text
             else:
-                bits += _conflicts.pop(0).result()
+                bits += _conflicts.pop(0).result(choice)
 
         return "".join(bits)
+
+    def get_ast(self) -> TranslationUnit:
+        """ AST of the `left` version of this file or `None` if a error occurred """
+        text = self.result(Choice.left)
+        filename = str(self.path)
+        index = Index.create()
+        try:
+            translation_unit = index.parse(filename, unsaved_files=[(filename, text)])
+        except TranslationUnitLoadError:
+            return None
+
+        return translation_unit if translation_unit else None  # not sure what else it can be
 
     @staticmethod
     def parse(path: Path):  # -> FileMerge:

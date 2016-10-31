@@ -7,6 +7,9 @@ from merge.project_merge import ProjectMerge
 
 
 if __name__ == "__main__":
+    from clang.cindex import Config
+    Config.set_library_file("/usr/local/opt/llvm/lib/libclang.dylib")
+
     args = parse_cli_args()
     project_path = Path(args.project_path)
 
@@ -22,6 +25,9 @@ if __name__ == "__main__":
 
     tmp_path = project_path.parent / ("~" + str(project_path.parts[-1]))
     merge = ProjectMerge.parse(project_path, tmp_path)
+
+    for file in merge.files:
+        file.get_ast()
 
     merge.select_all(args.choice)
 
