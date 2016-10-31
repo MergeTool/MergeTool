@@ -39,14 +39,13 @@ class FileMerge:
 
         return "".join(bits)
 
-    @property
-    def abstract_syntax_tree(self) -> TranslationUnit:
+    def abstract_syntax_tree(self, choice: Choice = Choice.left) -> TranslationUnit:
         """ AST of the `left` version of this file or `None` if a error occurred """
         """ The result is cashed """
         if self._translation_unit:
             return self._translation_unit
 
-        text = self.result(Choice.left)
+        text = self.result(choice)  # TODO: generalise to left and right
         text = re.sub(r'#include((<\w+>)|("\w+"))', '', text)  # TODO: hack
 
         filename = str(self.path)
@@ -64,9 +63,10 @@ class FileMerge:
         if not ast:
             return
 
-        ifs = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
+        if_blocks = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
 
-        print(ifs)
+        # for block in if_blocks:
+        #     [c for c in self.conflicts if c.line_number]
 
     @staticmethod
     def extract_children(root: Cursor, kind_list: [CursorKind] = []) -> [Cursor]:

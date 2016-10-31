@@ -13,7 +13,6 @@ class Conflict:
         self.sep2 = sep2
         self.sep3 = sep3
 
-        self._select = None
         self.choice = Choice.undesided
 
     def is_resolved(self) -> bool:
@@ -35,3 +34,18 @@ class Conflict:
             return self.left + self.right
         else:
             raise ValueError
+
+    def extend_top_up(self, chunk: str):
+        self.line_number -= chunk.count('\n')
+        self.left = chunk + self.left
+        self.right = chunk + self.right
+
+    def extend_bottom_down(self, chunk: str):
+        self.left += chunk
+        self.right += chunk
+
+    def start(self, choice: Choice):
+        return self.line_number  # TODO: accaunt for other shifts
+
+    def end(self, choice: Choice):
+        return self.line_number + len(self.result(choice).splitlines())
