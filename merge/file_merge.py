@@ -59,17 +59,19 @@ class FileMerge:
 
     def refactor_syntax_blocks(self):
         """ Only `if` is supported by now """
-        ast = self.abstract_syntax_tree
+        ast = self.abstract_syntax_tree(choice=Choice.left)
         if not ast:
             return
 
         if_blocks = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
 
+        print(if_blocks)
+
         # for block in if_blocks:
         #     [c for c in self.conflicts if c.line_number]
 
     @staticmethod
-    def extract_children(root: Cursor, kind_list: [CursorKind] = []) -> [Cursor]:
+    def extract_children(root: Cursor, kind_list: [CursorKind]) -> [Cursor]:
         nodes = []
         try:
             if root.kind in kind_list:
@@ -78,7 +80,7 @@ class FileMerge:
             pass
 
         for ch in root.get_children():
-            nodes.extend(FileMerge.extract_children(ch))
+            nodes.extend(FileMerge.extract_children(ch, kind_list))
 
         return nodes
 
