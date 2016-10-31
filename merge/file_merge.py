@@ -1,7 +1,8 @@
+import re
 from enum import Enum
 from pathlib import Path
 
-from clang.cindex import TranslationUnit, Index, TranslationUnitLoadError
+from clang.cindex import TranslationUnit, Index, TranslationUnitLoadError, Cursor, CursorKind, SourceLocation
 
 from .choice import Choice
 from .conflict import Conflict
@@ -17,6 +18,7 @@ class FileMerge:
         self.path = path
         self.file_bits = file_bits
         self.conflicts = conflicts
+        self._translation_unit = None
 
     def is_resolved(self):
         return len([c for c in self.conflicts if not c.is_resolved()]) == 0
@@ -37,17 +39,48 @@ class FileMerge:
 
         return "".join(bits)
 
-    def get_ast(self) -> TranslationUnit:
+    @property
+    def abstract_syntax_tree(self) -> TranslationUnit:
         """ AST of the `left` version of this file or `None` if a error occurred """
+        """ The result is cashed """
+        if self._translation_unit:
+            return self._translation_unit
+
         text = self.result(Choice.left)
+        text = re.sub(r'#include((<\w+>)|("\w+"))', '', text)  # TODO: hack
+
         filename = str(self.path)
         index = Index.create()
         try:
-            translation_unit = index.parse(filename, unsaved_files=[(filename, text)])
+            self._translation_unit = index.parse(filename, unsaved_files=[(filename, text)])
         except TranslationUnitLoadError:
-            return None
+            pass
 
-        return translation_unit if translation_unit else None  # not sure what else it can be
+        return self._translation_unit
+
+    def refactor_syntax_blocks(self):
+        """ Only `if` is supported by now """
+        ast = self.abstract_syntax_tree
+        if not ast:
+            return
+
+        ifs = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
+
+        print(ifs)
+
+    @staticmethod
+    def extract_children(root: Cursor, kind_list: [CursorKind] = []) -> [Cursor]:
+        nodes = []
+        try:
+            if root.kind in kind_list:
+                nodes.append(root)
+        except ValueError:
+            pass
+
+        for ch in root.get_children():
+            nodes.extend(FileMerge.extract_children(ch))
+
+        return nodes
 
     @staticmethod
     def parse(path: Path):  # -> FileMerge:

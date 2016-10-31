@@ -27,7 +27,7 @@ if __name__ == "__main__":
     merge = ProjectMerge.parse(project_path, tmp_path)
 
     for file in merge.files:
-        file.get_ast()
+        file.refactor_syntax_blocks()
 
     merge.select_all(args.choice)
 

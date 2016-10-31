@@ -13,6 +13,10 @@
 A simple command line tool for dumping a source file using the Clang Index
 Library.
 """
+from pprint import pprint
+
+from clang.cindex import CursorKind
+
 
 def get_diag_info(diag):
     return {'severity': diag.severity,
@@ -23,9 +27,6 @@ def get_diag_info(diag):
 
 
 def get_cursor_id(cursor, cursor_list=[]):
-    if not opts.showIDs:
-        return None
-
     if cursor is None:
         return None
 
@@ -39,11 +40,8 @@ def get_cursor_id(cursor, cursor_list=[]):
 
 
 def get_info(node, depth=0):
-    if opts.maxDepth is not None and depth >= opts.maxDepth:
-        children = None
-    else:
-        children = [get_info(c, depth + 1)
-                    for c in node.get_children()]
+    children = [get_info(c, depth + 1)
+                for c in node.get_children()]
     return {'id': get_cursor_id(node),
             'kind': node.kind,
             'usr': node.get_usr(),
@@ -57,8 +55,9 @@ def get_info(node, depth=0):
 
 def foreach_child(node, op, depth=0):
     op(node)
-    for ch in node.get_children():
-        foreach_child(ch, op, depth + 1)
+    if node.kind != CursorKind.INCLUSION_DIRECTIVE:
+        for ch in node.get_children():
+            foreach_child(ch, op, depth + 1)
 
 
 def main():
@@ -89,10 +88,12 @@ def main():
     root = translation_unit.cursor
 
     def action(n):
-        if n.kind == CursorKind.IF_STMT:
-            print("%s @ %s" % (n.kind, n.location))
+        # if n.kind == CursorKind.IF_STMT:
+        print("%s @ %s" % (n.kind, n.location))
 
     foreach_child(root, action)
+
+    pprint(get_info(root))
 
 
 if __name__ == '__main__':
