@@ -14,7 +14,6 @@ A simple command line tool for dumping a source file using the Clang Index
 Library.
 """
 
-
 def get_diag_info(diag):
     return {'severity': diag.severity,
             'location': diag.location,
@@ -58,42 +57,31 @@ def get_info(node, depth=0):
 
 def foreach_child(node, op, depth=0):
     op(node)
-    if opts.maxDepth is not None and depth >= opts.maxDepth:
-        children = None
-    else:
-        for ch in node.get_children():
-            foreach_child(ch, op, depth + 1)
+    for ch in node.get_children():
+        foreach_child(ch, op, depth + 1)
 
 
 def main():
     from clang.cindex import Index
     from clang.cindex import CursorKind
-    from pprint import pprint
-
-    from optparse import OptionParser, OptionGroup
-
-    global opts
 
     from clang.cindex import Config
     Config.set_library_file("/usr/local/opt/llvm/lib/libclang.dylib")
 
-    parser = OptionParser("usage: %prog [options] {filename} [clang-args*]")
-    parser.add_option("", "--show-ids", dest="showIDs",
-                      help="Compute cursor IDs (very slow)",
-                      action="store_true", default=False)
-    parser.add_option("", "--max-depth", dest="maxDepth",
-                      help="Limit cursor expansion to depth N",
-                      metavar="N", type=int, default=None)
-    parser.disable_interspersed_args()
-    (opts, args) = parser.parse_args()
+    global opts
+    import sys
 
-    if len(args) == 0:
-        parser.error('invalid number arguments')
+    if len(sys.argv) == 1:
+        print('please provide a path to a source file', file=sys.stderr)
+
+    path = sys.argv[1]
+    file = open(path)
+    text = file.read()
 
     index = Index.create()
-    translation_unit = index.parse(None, args)
+    translation_unit = index.parse(path, unsaved_files=[(path, text)])
     if not translation_unit:
-        parser.error("unable to load input")
+        print("unable to load input", file=sys.stderr)
 
     # pprint(('diags', map(get_diag_info, translation_unit.diagnostics)))
     # pprint(('nodes', get_info(translation_unit.cursor)))
@@ -105,10 +93,6 @@ def main():
             print("%s @ %s" % (n.kind, n.location))
 
     foreach_child(root, action)
-
-    # children = root.get_children()
-    # for ch in children:
-    #     print("%s @ %s" % (ch.kind, ch.location))
 
 
 if __name__ == '__main__':
