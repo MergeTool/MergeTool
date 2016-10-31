@@ -2,10 +2,14 @@ from .choice import Choice
 
 
 class Conflict:
-    def __init__(self, line_number: int, left: str, right: str,
+    def __init__(self, line_number: int, line_num_left: int, line_num_right: int,
+                 left: str, right: str,
                  sep1: str = '<<<\n', sep2: str = '===\n', sep3: str = '>>>\n'):
 
         self.line_number = line_number
+        self.line_num_left = line_num_left
+        self.line_num_right = line_num_right
+
         self.left = left
         self.right = right
 
@@ -36,7 +40,10 @@ class Conflict:
             raise ValueError
 
     def extend_top_up(self, chunk: str):
-        self.line_number -= chunk.count('\n')
+        line_num = chunk.count('\n')
+        self.line_number -= line_num
+        self.line_num_left -= line_num
+        self.line_num_right -= line_num
         self.left = chunk + self.left
         self.right = chunk + self.right
 
@@ -45,7 +52,12 @@ class Conflict:
         self.right += chunk
 
     def start(self, choice: Choice):
-        return self.line_number  # TODO: accaunt for other shifts
+        if choice is Choice.left:
+            return self.line_num_left
+        elif choice is Choice.right:
+            return self.line_num_right
+        else:
+            raise ValueError
 
     def end(self, choice: Choice):
-        return self.line_number + len(self.result(choice).splitlines())
+        return self.start(choice) + len(self.result(choice).splitlines())

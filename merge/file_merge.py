@@ -59,7 +59,8 @@ class FileMerge:
 
     def refactor_syntax_blocks(self):
         """ Only `if` is supported by now """
-        ast = self.abstract_syntax_tree(choice=Choice.left)
+        _choice = Choice.left
+        ast = self.abstract_syntax_tree(_choice)
         if not ast:
             return
 
@@ -67,8 +68,36 @@ class FileMerge:
 
         print(if_blocks)
 
-        # for block in if_blocks:
-        #     [c for c in self.conflicts if c.line_number]
+        for block in if_blocks:
+            intersecting_conflicts = [conflict for conflict in self.conflicts
+                                      if block.extent.start.line <= conflict.start(_choice) <=
+                                      block.extent.end.line <= conflict.end(_choice)]
+
+            if len(intersecting_conflicts) > 0:
+                conflict = intersecting_conflicts[0]
+                i = self.conflicts.index(conflict)
+                file_bit = self.file_bits[i]
+                # assert file_bit.line_number + len(file_bit.text.splitlines()) == conflict.line_number
+
+                num = conflict.start(_choice) - block.extent.start.line + 1
+                chunk = file_bit.shrink_bottom_up(num)
+                conflict.extend_top_up(chunk)
+
+        for block in if_blocks:
+            intersecting_conflicts = [conflict for conflict in self.conflicts
+                                      if conflict.start(_choice) <= block.extent.start.line <=
+                                      conflict.end(_choice) <= block.extent.end.line]
+
+            if len(intersecting_conflicts) > 0:
+                conflict = intersecting_conflicts[0]
+                i = self.conflicts.index(conflict)
+                file_bit = self.file_bits[i + 1]
+                # assert file_bit.line_number == conflict.line_number + len(conflict.result(Choice.undesided).splitlines())
+
+                num = block.extent.end.line - conflict.end(_choice)
+                chunk = file_bit.shrink_top_down(num)
+                conflict.extend_bottom_down(chunk)
+
 
     @staticmethod
     def extract_children(root: Cursor, kind_list: [CursorKind]) -> [Cursor]:
@@ -99,37 +128,45 @@ class FileMerge:
 
         state = State.text
         file_bit = FileBit(0, "")
-        conflict = Conflict(-1, "", "")
+        conflict = Conflict(-1, -1, -1, "", "")
 
+        line_num_left = 0
+        line_num_right = 0
         for index, line in enumerate(fileobj_lines):
             switch = line[0:3]
 
-            if State.text == state:
+            if state == State.text:
                 if switch == "<<<":
                     state = State.left
                     file_bits.append(file_bit)
                     file_bit = FileBit(0, "")
                     conflict.line_number = index
+                    conflict.line_num_left = line_num_left
                     conflict.sep1 = line
                 else:
                     file_bit.text += line
+                    line_num_left += 1
+                    line_num_right += 1
 
-            elif State.left == state:
+            elif state == State.left:
                 if switch == "===":
                     state = State.right
+                    conflict.line_num_right = line_num_right
                     conflict.sep2 = line
                 else:
                     conflict.left += line
+                    line_num_left += 1
 
-            elif State.right == state:
+            elif state == State.right:
                 if switch == ">>>":
                     state = State.text
                     conflict.sep3 = line
                     conflicts.append(conflict)
-                    conflict = Conflict(-1, "", "")
+                    conflict = Conflict(-1, -1, -1, "", "")
                     file_bit.line_number = index + 1
                 else:
                     conflict.right += line
+                    line_num_right += 1
 
             else:
                 raise ValueError
