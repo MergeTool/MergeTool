@@ -3,6 +3,7 @@ from pathlib import Path
 
 from .choice import Choice
 from .conflict import Conflict
+from .conflict import Diff3Conflict
 from .file_bit import FileBit
 
 
@@ -50,8 +51,10 @@ class FileMerge:
         conflicts = []
 
         state = State.text
-        file_bit = FileBit(0, "")
-        conflict = Conflict(-1, "", "")
+        #file_bit = FileBit(0, "")
+        #conflict = Conflict(-1, "", "")
+        left, text, line = "", "", 0    #???
+        sep1, conf_line = "", 0         #???
 
         for index, line in enumerate(fileobj_lines):
             switch = line[0:7]
@@ -62,38 +65,41 @@ class FileMerge:
             if State.text == state:
                 if switch == "<<<<<<<":
                     state = State.left
+                    file_bit = FileBit(line, text)
+                    text = ""
                     file_bits.append(file_bit)
-                    file_bit = FileBit(0, "")
-                    conflict.line_number = index
-                    conflict.sep1 = line
+                    conf_line = index
+                    sep1 = line
                 else:
-                    file_bit.text += line
+                    text += line
 
             elif State.left == state:
                 if switch == "|||||||":
                     state = State.base
-                    conflict.sep2 = line
+                    conflict = Diff3Conflict(conf_line, left, "", "", sep1)
+                    left = ""
+                    conflict.sep = line
                 elif switch == "=======":
                     state = State.right
-                    conflict.sep2 = "\n"
-                    conflict.sep3 = line
+                    conflict = Conflict(conf_line, left, "", sep1)
+                    left = ""
+                    conflict.sep2 = line
                 else:
-                    conflict.left += line
+                    left += line
     
             elif State.base == state:
                 if switch == "=======":
                     state = State.right
-                    conflict.sep3 = line
+                    conflict.sep2 = line
                 else:
                     conflict.base += line
 
             elif State.right == state:
                 if switch == ">>>>>>>":
                     state = State.text
-                    conflict.sep4 = line
+                    conflict.sep3 = line
                     conflicts.append(conflict)
-                    conflict = Conflict(-1, "", "")
-                    file_bit.line_number = index + 1
+                    line = index + 1
                 else:
                     conflict.right += line
 
