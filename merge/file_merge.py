@@ -106,6 +106,7 @@ class FileMerge:
             else:
                 raise ValueError
 
+        file_bit = FileBit(line, text)
         file_bits.append(file_bit)
 
         return FileMerge(path, file_bits, conflicts)
