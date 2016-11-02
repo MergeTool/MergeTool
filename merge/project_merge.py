@@ -1,6 +1,7 @@
 import shutil
 import subprocess
 import sys
+import os
 from pathlib import Path
 
 from .choice import Choice
@@ -65,7 +66,8 @@ class ProjectMerge:
     @staticmethod
     def parse(path: Path, tmp_path: Path):  # -> ProjectMerge:
         merges = []
-        for file in path.iterdir():
-            merges.append(FileMerge.parse(file))
+        for folder, subs, files in os.walk(path.__str__()):
+            for filename in files:
+                merges.append(FileMerge.parse(Path(folder, filename)))
 
         return ProjectMerge(path, tmp_path, merges)
