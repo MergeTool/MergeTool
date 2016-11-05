@@ -53,15 +53,12 @@ class FileMerge:
         state = State.text
         #file_bit = FileBit(0, "")
         #conflict = Conflict(-1, "", "")
-        left, text, line = "", "", 0    #???
-        sep1, conf_line = "", 0         #???
+        left, text, sep1 = "", "", ""
+        line, conf_line = 0, 0
 
         for index, line in enumerate(fileobj_lines):
             switch = line[0:7]
-            
 
-#reason for the changes explained here:
-#https://jira.mipt.parallels.ru/confluence/display/SYM/How+conflicts+are+presented
             if State.text == state:
                 if switch == "<<<<<<<":
                     state = State.left

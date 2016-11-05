@@ -1,6 +1,5 @@
 from merge.choice import Choice
 from merge.project_merge import ProjectMerge
-from merge.conflict import ConflictStyle
 from ui.index import Index
 
 
@@ -56,13 +55,7 @@ def resolve_conflicts_event_loop(project_merge: ProjectMerge):
                 print("Unsupported command %s" % response)
 
         else:
-            print("\n left = ")
-            print(conflicts.value().left)
-            print("\n right = ")
-            print(conflicts.value().right)
-            if ConflictStyle.diff3 == conflicts.value().conflict_style:
-                print("\n base = ")
-                print(conflicts.value().base)
+            conflicts.value().print_description()
 
             response = input(
                 "Choose what to leave ('L' = left, 'R' = right, 'B' = both, "

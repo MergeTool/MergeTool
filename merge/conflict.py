@@ -1,16 +1,10 @@
 from .choice import Choice
 from enum import Enum
 
-class ConflictStyle(Enum):
-    default = 0
-    diff3 = 1
-
 
 class Conflict:
     def __init__(self, line_number: int, left: str, right: str,
                  sep1: str = '<<<<<<<\n', sep2: str = '=======\n', sep3: str = '>>>>>>>\n'):
-        
-        self.conflict_style = ConflictStyle.default
 
         self.line_number = line_number
         self.left = left
@@ -46,14 +40,18 @@ class Conflict:
         else:
             raise ValueError
 
+    def print_description(self):
+        print("\n left = ")
+        print(self.left)
+        print("\n right = ")
+        print(self.right)
+
 
 class Diff3Conflict(Conflict):
     def __init__(self, line_number: int, left: str, right: str, base: str = "", sep: str = '|||||||\n',
                  sep1: str = '<<<<<<<\n', sep2: str = '=======\n', sep3: str = '>>>>>>>\n'):
         
         super().__init__(self, line_number, left, right, sep1, sep2, sep3)
-                 
-        self.conflict_style = ConflictStyle.diff3
 
         self.sep = sep
         self.base = base
@@ -63,5 +61,11 @@ class Diff3Conflict(Conflict):
             return self.sep1 + self.left + self.sep+ + self.base + self.sep2 + self.right + self.sep3
         else:
             return super().result()
+
+    def print_description(self):
+        super().printConflict()
+        print("\n base = ")
+        print(self.base)
+
 
 
