@@ -20,11 +20,6 @@ class Conflict:
     def is_resolved(self) -> bool:
         return self.choice.is_resolved()
     
-    #def hasBase(self)-> bool:
-    #    while self.base != (self.base.lstrip().lstrip("\n")):
-    #        self.base = self.base.lstrip().lstrip("\n")
-    #    return "" != self.base
-
     def select(self, choice: Choice):
         self.choice = choice
 
