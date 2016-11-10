@@ -55,10 +55,7 @@ def resolve_conflicts_event_loop(project_merge: ProjectMerge):
                 print("Unsupported command %s" % response)
 
         else:
-            print("\n left = ")
-            print(conflicts.value().left)
-            print("\n right = ")
-            print(conflicts.value().right)
+            conflicts.value().print_description()
 
             response = input(
                 "Choose what to leave ('L' = left, 'R' = right, 'B' = both, "

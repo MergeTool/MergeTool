@@ -1,9 +1,10 @@
 from .choice import Choice
+from enum import Enum
 
 
 class Conflict:
     def __init__(self, line_number: int, left: str, right: str,
-                 sep1: str = '<<<\n', sep2: str = '===\n', sep3: str = '>>>\n'):
+                 sep1: str = '<<<<<<<\n', sep2: str = '=======\n', sep3: str = '>>>>>>>\n'):
 
         self.line_number = line_number
         self.left = left
@@ -18,7 +19,7 @@ class Conflict:
 
     def is_resolved(self) -> bool:
         return self.choice.is_resolved()
-
+    
     def select(self, choice: Choice):
         self.choice = choice
 
@@ -33,3 +34,33 @@ class Conflict:
             return self.left + self.right
         else:
             raise ValueError
+
+    def print_description(self):
+        print("\n left = ")
+        print(self.left)
+        print("\n right = ")
+        print(self.right)
+
+
+class Diff3Conflict(Conflict):
+    def __init__(self, line_number: int, left: str, right: str, base: str = "", sep: str = '|||||||\n',
+                 sep1: str = '<<<<<<<\n', sep2: str = '=======\n', sep3: str = '>>>>>>>\n'):
+        
+        super().__init__(self, line_number, left, right, sep1, sep2, sep3)
+
+        self.sep = sep
+        self.base = base
+
+    def result(self) -> str:
+        if self.choice is Choice.undecided:
+            return self.sep1 + self.left + self.sep+ + self.base + self.sep2 + self.right + self.sep3
+        else:
+            return super().result()
+
+    def print_description(self):
+        super().printConflict()
+        print("\n base = ")
+        print(self.base)
+
+
+
