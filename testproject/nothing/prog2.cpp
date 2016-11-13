@@ -1,4 +1,4 @@
-include "prog.hpp"
+#include "prog.hpp"
 
 <<<<<<<
 int factorial(int n){
