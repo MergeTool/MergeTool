@@ -43,6 +43,7 @@ class ProjectMerge:
         for file in self.files:
             relative_path = file.path.relative_to(self.path)
             path = buf_path / relative_path
+            os.makedirs(os.path.dirname(path.__str__()), exist_ok=True)
             path.write_text(file.result(), encoding="latin-1")
 
     def compile_print(self):
