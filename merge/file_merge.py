@@ -40,7 +40,7 @@ class FileMerge:
         return "".join(bits)
 
     def abstract_syntax_tree(self, choice: Choice = Choice.left) -> TranslationUnit:
-        """ AST of the `left` version of this file or `None` if a error occurred """
+        """ AST of the `choice` version of this file or `None` if a error occurred """
         """ The result is cashed """
         if self._translation_unit:
             return self._translation_unit
@@ -174,3 +174,8 @@ class FileMerge:
         file_bits.append(file_bit)
 
         return FileMerge(path, file_bits, conflicts)
+
+    @staticmethod
+    def can_parse(path: Path) -> bool:
+        allowed_extensions = [".cpp", ".c", ".hpp", ".h"]
+        return path.suffix in allowed_extensions

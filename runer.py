@@ -13,9 +13,11 @@
 A simple command line tool for dumping a source file using the Clang Index
 Library.
 """
+import re
 from pprint import pprint
 
-from clang.cindex import CursorKind
+import sys
+from clang.cindex import CursorKind, Index, TranslationUnit, Cursor, conf, callbacks
 
 
 def get_diag_info(diag):
@@ -41,7 +43,7 @@ def get_cursor_id(cursor, cursor_list=[]):
 
 def get_info(node, depth=0):
     children = [get_info(c, depth + 1)
-                for c in node.get_children()]
+                for c in get_children_r(node)]
     return {'id': get_cursor_id(node),
             'kind': node.kind,
             'usr': node.get_usr(),
@@ -53,6 +55,15 @@ def get_info(node, depth=0):
             'definition id': get_cursor_id(node.get_definition()),
             'children': children}
 
+
+def get_short_info(node, depth=0):
+    children = [get_short_info(c, depth + 1)
+                for c in get_children_r(node)]
+    return [
+            node.kind,
+            node.extent.start.line,
+            children]
+
 def foreach_child(node, op, depth=0):
     op(node)
     if node.kind != CursorKind.INCLUSION_DIRECTIVE:
@@ -60,40 +71,65 @@ def foreach_child(node, op, depth=0):
             foreach_child(ch, op, depth + 1)
 
 
-def main():
-    from clang.cindex import Index
-    from clang.cindex import CursorKind
-
-    from clang.cindex import Config
-    Config.set_library_file("/usr/local/opt/llvm/lib/libclang.dylib")
-
-    global opts
-    import sys
-
-    if len(sys.argv) == 1:
-        print('please provide a path to a source file', file=sys.stderr)
-
-    path = sys.argv[1]
+def abstract_syntax_tree(path: str) -> TranslationUnit:
     file = open(path)
     text = file.read()
+    text = re.sub(r'#include((<\w+>)|("\w+"))', '', text)
 
     index = Index.create()
     translation_unit = index.parse(path, unsaved_files=[(path, text)])
+
     if not translation_unit:
         print("unable to load input", file=sys.stderr)
 
-    # pprint(('diags', map(get_diag_info, translation_unit.diagnostics)))
-    # pprint(('nodes', get_info(translation_unit.cursor)))
+    return translation_unit
 
-    root = translation_unit.cursor
+
+def extract_children(root: Cursor, kind_list: [CursorKind]) -> [Cursor]:
+    nodes = []
+    try:
+        if root.kind in kind_list:
+            nodes.append(root)
+    except ValueError:
+        pass
+
+    for ch in get_children_r(root):
+        nodes.extend(extract_children(ch, kind_list))
+
+    return nodes
+
+
+def get_children_r(cursor: Cursor):
+    def visitor(child, parent, children):
+        assert child != conf.lib.clang_getNullCursor()
+
+        # Create reference to TU so it isn't GC'd before Cursor.
+        child._tu = cursor._tu
+        children.append(child)
+        return 2  # recurse
+
+    children = []
+    conf.lib.clang_visitChildren(cursor, callbacks['cursor_visit'](visitor), children)
+    return iter(children)
+
+def main():
+    from clang.cindex import Config
+    Config.set_library_file("/usr/local/opt/llvm/lib/libclang.dylib")
+
+    path = "/Users/voddan/Programming/Parallels/MergeTool/prototype/~testproject/prog.cpp"
+    ast = abstract_syntax_tree(path)
+    root = ast.cursor
+
+    # pprint(('nodes', get_info(root)))
+    pprint(get_short_info(root))
+
 
     def action(n):
         # if n.kind == CursorKind.IF_STMT:
         print("%s @ %s" % (n.kind, n.location))
 
-    foreach_child(root, action)
+    # foreach_child(root, action)
 
-    pprint(get_info(root))
 
 
 if __name__ == '__main__':
