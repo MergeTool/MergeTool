@@ -17,10 +17,12 @@ import re
 from pprint import pprint
 
 import sys
+
+import itertools
 from clang.cindex import CursorKind, Index, TranslationUnit, Cursor, conf, callbacks
 
 
-def get_diag_info(diag):
+def diag_info(diag):
     return {'severity': diag.severity,
             'location': diag.location,
             'spelling': diag.spelling,
@@ -28,22 +30,7 @@ def get_diag_info(diag):
             'fixits': diag.fixits}
 
 
-def get_cursor_id(cursor, cursor_list=[]):
-    if cursor is None:
-        return None
-
-    # FIXME: This is really slow. It would be nice if the index API exposed
-    # something that let us hash cursors.
-    for i, c in enumerate(cursor_list):
-        if cursor == c:
-            return i
-    cursor_list.append(cursor)
-    return len(cursor_list) - 1
-
-
-def get_info(node, depth=0):
-    children = [get_info(c, depth + 1)
-                for c in get_children_r(node)]
+def info(node):
     return {'id': get_cursor_id(node),
             'kind': node.kind,
             'usr': node.get_usr(),
@@ -53,22 +40,16 @@ def get_info(node, depth=0):
             'extent.end': node.extent.end,
             'is_definition': node.is_definition(),
             'definition id': get_cursor_id(node.get_definition()),
-            'children': children}
+            'children': node.get_children}
 
 
-def get_short_info(node, depth=0):
-    children = [get_short_info(c, depth + 1)
-                for c in get_children_r(node)]
-    return [
-            node.kind,
-            node.extent.start.line,
-            children]
+def short_info_tree(node: Cursor, depth=0):
+    children = [short_info_tree(c, depth + 1)
+                for c in node.get_children()]
+    return short_info(node) + [children]
 
-def foreach_child(node, op, depth=0):
-    op(node)
-    if node.kind != CursorKind.INCLUSION_DIRECTIVE:
-        for ch in node.get_children():
-            foreach_child(ch, op, depth + 1)
+def short_info(node):
+    return [node.kind, node.extent.start.line]
 
 
 def abstract_syntax_tree(path: str) -> TranslationUnit:
@@ -86,31 +67,30 @@ def abstract_syntax_tree(path: str) -> TranslationUnit:
 
 
 def extract_children(root: Cursor, kind_list: [CursorKind]) -> [Cursor]:
+    children = get_children_r(root)
     nodes = []
-    try:
-        if root.kind in kind_list:
-            nodes.append(root)
-    except ValueError:
-        pass
-
-    for ch in get_children_r(root):
-        nodes.extend(extract_children(ch, kind_list))
+    for ch in children:
+        try:
+            if ch.kind in kind_list:
+                nodes.append(ch)
+        except ValueError:
+            pass
 
     return nodes
 
 
 def get_children_r(cursor: Cursor):
-    def visitor(child, parent, children):
-        assert child != conf.lib.clang_getNullCursor()
+    for ch in cursor.get_children():
+        yield ch
+        for r_ch in get_children_r(ch):
+            yield r_ch
 
-        # Create reference to TU so it isn't GC'd before Cursor.
-        child._tu = cursor._tu
-        children.append(child)
-        return 2  # recurse
 
-    children = []
-    conf.lib.clang_visitChildren(cursor, callbacks['cursor_visit'](visitor), children)
-    return iter(children)
+def get_child(self: Cursor, n: int) -> Cursor:
+    return list(self.get_children())[n]
+
+Cursor.child = get_child
+
 
 def main():
     from clang.cindex import Config
@@ -120,15 +100,28 @@ def main():
     ast = abstract_syntax_tree(path)
     root = ast.cursor
 
-    # pprint(('nodes', get_info(root)))
-    pprint(get_short_info(root))
+    # [[CursorKind.USING_DIRECTIVE, 6], [CursorKind.FUNCTION_DECL, 8]]
+    # [[CursorKind.COMPOUND_STMT, 9]]
+    # [[CursorKind.DECL_STMT, 10], [CursorKind.IF_STMT, 13], [CursorKind.IF_STMT, 20], [CursorKind.FOR_STMT, 26], [CursorKind.RETURN_STMT, 55]]
+    # [[CursorKind.BINARY_OPERATOR, 26], [CursorKind.BINARY_OPERATOR, 26], [CursorKind.COMPOUND_STMT, 27]]
+    # [[CursorKind.BINARY_OPERATOR, 37], [CursorKind.BINARY_OPERATOR, 39], [CursorKind.IF_STMT, 40], [CursorKind.BINARY_OPERATOR, 45], [CursorKind.UNARY_OPERATOR, 46], [CursorKind.IF_STMT, 48]]
 
+    main_8 = root.child(1).child(0)
+    for_26 = main_8.child(3)
+    for_28 = for_26.child(3).child(0)
+    if_30 = for_28.child(3).child(0)
+    if_40 = for_26.child(3).child(3)
+    if_45 = if_40.child(1).child(1)
 
-    def action(n):
-        # if n.kind == CursorKind.IF_STMT:
-        print("%s @ %s" % (n.kind, n.location))
+    node = if_30
+    pprint([short_info(ch) for ch in node.get_children()])
+    print('\n')
 
-    # foreach_child(root, action)
+    pprint([short_info(ch) for ch in get_children_r(root)])
+    print('\n')
+
+    pprint([short_info(ch) for ch in extract_children(root, [CursorKind.IF_STMT, CursorKind.FOR_STMT])])
+    print('\n')
 
 
 

@@ -32,7 +32,7 @@ int main()
  
    for ( count = 2 ; count <=n ;  )
    {
-      for ( c = 2 ; c <= (int)sqrt(num) ; c++ )
+      for ( c = 2 ; c <= num ; c++ )
       {
 <<<<<<< HEAD
          if ( num%c == 0 )

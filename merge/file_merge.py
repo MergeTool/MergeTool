@@ -19,6 +19,7 @@ class FileMerge:
         self.file_bits = file_bits
         self.conflicts = conflicts
         self._translation_unit = None
+        self._translation_unit_choice = None
 
     def is_resolved(self):
         return len([c for c in self.conflicts if not c.is_resolved()]) == 0
@@ -28,6 +29,9 @@ class FileMerge:
             conflict.select(choice)
 
     def result(self, choice: Choice = None) -> str:
+        if len(self.file_bits) == 1 and len(self.conflicts) == 0:
+            return self.file_bits[0].text
+
         _file_bits = self.file_bits[:]
         _conflicts = self.conflicts[:]
         bits = []
@@ -42,15 +46,19 @@ class FileMerge:
     def abstract_syntax_tree(self, choice: Choice = Choice.left) -> TranslationUnit:
         """ AST of the `choice` version of this file or `None` if a error occurred """
         """ The result is cashed """
-        if self._translation_unit:
+        if self._translation_unit and self._translation_unit_choice == choice:
             return self._translation_unit
 
-        text = self.result(choice)  # TODO: generalise to left and right
+        if not FileMerge.can_parse(self.path):
+            raise RuntimeError("This file extension is not supported")
+
+        text = self.result(choice)
         text = re.sub(r'#include((<\w+>)|("\w+"))', '', text)  # TODO: hack
 
         filename = str(self.path)
         index = Index.create()
         try:
+            self._translation_unit_choice = choice
             self._translation_unit = index.parse(filename, unsaved_files=[(filename, text)])
         except TranslationUnitLoadError:
             pass
@@ -59,6 +67,10 @@ class FileMerge:
 
     def refactor_syntax_blocks(self):
         """ Only `if` is supported by now """
+
+        if len(self.conflicts) == 0:
+            return
+
         _choice = Choice.left
         ast = self.abstract_syntax_tree(_choice)
         if not ast:
@@ -66,8 +78,10 @@ class FileMerge:
 
         if_blocks = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
 
-        print(if_blocks)
+        for i in if_blocks:
+            print([i.kind, i.extent.start.line])
 
+        # situation: `{ <<< } >>>`
         for block in if_blocks:
             intersecting_conflicts = [conflict for conflict in self.conflicts
                                       if block.extent.start.line <= conflict.start(_choice) <=
@@ -83,6 +97,7 @@ class FileMerge:
                 chunk = file_bit.shrink_bottom_up(num)
                 conflict.extend_top_up(chunk)
 
+        # situation: `<<< { >>> }`
         for block in if_blocks:
             intersecting_conflicts = [conflict for conflict in self.conflicts
                                       if conflict.start(_choice) <= block.extent.start.line <=
@@ -98,18 +113,24 @@ class FileMerge:
                 chunk = file_bit.shrink_top_down(num)
                 conflict.extend_bottom_down(chunk)
 
+    @staticmethod
+    def _get_children_recursive(cursor: Cursor):
+        """ Returns a one-go iterator for efficiency """
+        for ch in cursor.get_children():
+            yield ch
+            for r_ch in FileMerge._get_children_recursive(ch):
+                yield r_ch
 
     @staticmethod
     def extract_children(root: Cursor, kind_list: [CursorKind]) -> [Cursor]:
         nodes = []
-        try:
-            if root.kind in kind_list:
-                nodes.append(root)
-        except ValueError:
-            pass
 
-        for ch in root.get_children():
-            nodes.extend(FileMerge.extract_children(ch, kind_list))
+        for node in FileMerge._get_children_recursive(root):
+            try:
+                if node.kind in kind_list:
+                    nodes.append(node)
+            except ValueError:
+                pass
 
         return nodes
 
@@ -119,6 +140,10 @@ class FileMerge:
             text = 1
             left = 2
             right = 3
+
+        if not FileMerge.can_parse(path):
+            text = path.read_text(encoding="latin-1")
+            return FileMerge(path, [FileBit(0, text)], [])
 
         stream = path.open('r', encoding="latin-1")
 
