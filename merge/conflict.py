@@ -1,17 +1,18 @@
 from .choice import Choice
 
 
-class Conflict:
-    def __init__(self, line_number: int, left: str, right: str,
-                 sep1: str, sep2: str, sep3: str):
+class Conflict3Way:
+    def __init__(self, line_number: int, left: str, base: str, right: str, sep1: str, sep2: str, sep3: str, sep4: str):
 
         self.line_number = line_number
         self.left = left
+        self.base = base
         self.right = right
 
         self.sep1 = sep1
         self.sep2 = sep2
         self.sep3 = sep3
+        self.sep4 = sep4
 
         self._select = None
         self.choice = Choice.undesided
@@ -24,7 +25,7 @@ class Conflict:
 
     def result(self) -> str:
         if self.choice is Choice.undesided:
-            return self.sep1 + self.left + self.sep2 + self.right + self.sep3
+            return self.sep1 + self.left + self.sep2 + self.base + self.sep3 + self.right + self.sep4
         elif self.choice is Choice.left:
             return self.left
         elif self.choice is Choice.right:
@@ -34,34 +35,23 @@ class Conflict:
         else:
             raise ValueError
 
+    def description(self):
+        return "\n left = \n" + self.left + "\n right = \n" + self.right + "\n base = \n" + self.base
+
+
+class Conflict2Way(Conflict3Way):
+    def __init__(self, line_number: int, left: str, right: str, sep1: str, sep3: str, sep4: str):
+        super().__init__(line_number, left, "", right, sep1, "", sep3, sep4)
+
     def description(self) -> str:
         return "\n left = \n" + self.left + "\n right = \n" + self.right
 
 
-class Conflict3Way(Conflict):
-    def __init__(self, line_number: int, left: str, right: str, base: str,
-                 sep_base: str, sep1: str, sep2: str, sep3: str):
-        
-        super().__init__(line_number, left, right, sep1, sep2, sep3)
-
-        self.sep_base = sep_base
-        self.base = base
-
-    def result(self) -> str:
-        if self.choice is Choice.undecided:
-            return self.sep1 + self.left + self.sep_base + self.base + self.sep2 + self.right + self.sep3
-        else:
-            return super().result()
-
-    def description(self):
-        return super().description() + "\n base = \n" + self.base
-
-
 class ConflictBuilder:
     sep1_marker = "<<<<<<<"
-    sep_base_marker = "|||||||"
-    sep2_marker = "======="
-    sep3_marker = ">>>>>>>"
+    sep2_marker = "|||||||"
+    sep3_marker = "======="
+    sep4_marker = ">>>>>>>"
 
     def __init__(self):
         self.has_base = False
@@ -72,14 +62,12 @@ class ConflictBuilder:
         self.right = ""
 
         self.sep1 = ConflictBuilder.sep1_marker + '\n'
-        self.sep_base = ConflictBuilder.sep_base_marker + '\n'
         self.sep2 = ConflictBuilder.sep2_marker + '\n'
         self.sep3 = ConflictBuilder.sep3_marker + '\n'
+        self.sep4 = ConflictBuilder.sep4_marker + '\n'
 
     def build(self):
         if self.has_base:
-            return Conflict3Way(self.line_number, self.left, self.right, self.base,
-                                self.sep_base, self.sep1, self.sep2, self.sep3)
+            return Conflict3Way(self.line_number, self.left, self.base, self.right, self.sep1, self.sep2, self.sep3, self.sep4)
         else:
-            return Conflict(self.line_number, self.left, self.right,
-                            self.sep1, self.sep2, self.sep3)
+            return Conflict2Way(self.line_number, self.left, self.right, self.sep1, self.sep3, self.sep4)
