@@ -2,7 +2,7 @@ from enum import Enum
 from pathlib import Path
 
 from .choice import Choice
-from .conflict import Conflict
+from .conflict import Conflict, ConflictBuilder
 from .conflict import Conflict3Way
 from .file_bit import FileBit
 
@@ -51,59 +51,53 @@ class FileMerge:
         conflicts = []
 
         state = State.text
-        #file_bit = FileBit(0, "")
-        #conflict = Conflict(-1, "", "")
-        left, text, sep1 = "", "", ""
-        line, conf_line = 0, 0
+        file_bit = FileBit(0, "")
+        conflict = ConflictBuilder()
 
         for index, line in enumerate(fileobj_lines):
             switch = line[0:7]
 
             if State.text == state:
-                if switch == "<<<<<<<":
+                if switch == ConflictBuilder.sep1_marker:
                     state = State.left
-                    file_bit = FileBit(line, text)
-                    text = ""
                     file_bits.append(file_bit)
-                    conf_line = index
-                    sep1 = line
+                    file_bit = FileBit(0, "")
+                    conflict.line_number = index
+                    conflict.sep1 = line
                 else:
-                    text += line
+                    file_bit.text += line
 
             elif State.left == state:
-                if switch == "|||||||":
+                if switch == ConflictBuilder.sep_base_marker:
                     state = State.base
-                    conflict = Conflict3Way(conf_line, left, "", "", sep1)
-                    left = ""
+                    conflict.has_base = True
                     conflict.sep_base = line
-                elif switch == "=======":
+                elif switch == ConflictBuilder.sep2_marker:
                     state = State.right
-                    conflict = Conflict(conf_line, left, "", sep1)
-                    left = ""
                     conflict.sep2 = line
                 else:
-                    left += line
-    
+                    conflict.left += line
+
             elif State.base == state:
-                if switch == "=======":
+                if switch == ConflictBuilder.sep2_marker:
                     state = State.right
                     conflict.sep2 = line
                 else:
                     conflict.base += line
 
             elif State.right == state:
-                if switch == ">>>>>>>":
+                if switch == ConflictBuilder.sep3_marker:
                     state = State.text
                     conflict.sep3 = line
-                    conflicts.append(conflict)
-                    line = index + 1
+                    conflicts.append(conflict.build())
+                    conflict = ConflictBuilder()
+                    file_bit.line_number = index + 1
                 else:
                     conflict.right += line
 
             else:
                 raise ValueError
 
-        file_bit = FileBit(line, text)
         file_bits.append(file_bit)
 
         return FileMerge(path, file_bits, conflicts)
