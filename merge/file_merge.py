@@ -3,7 +3,7 @@ from pathlib import Path
 
 from .choice import Choice
 from .conflict import Conflict
-from .conflict import Diff3Conflict
+from .conflict import Conflict3Way
 from .file_bit import FileBit
 
 
@@ -73,9 +73,9 @@ class FileMerge:
             elif State.left == state:
                 if switch == "|||||||":
                     state = State.base
-                    conflict = Diff3Conflict(conf_line, left, "", "", sep1)
+                    conflict = Conflict3Way(conf_line, left, "", "", sep1)
                     left = ""
-                    conflict.sep = line
+                    conflict.sep_base = line
                 elif switch == "=======":
                     state = State.right
                     conflict = Conflict(conf_line, left, "", sep1)
