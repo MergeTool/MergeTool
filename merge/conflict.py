@@ -70,8 +70,10 @@ class Conflict3Way:
 
 
 class Conflict2Way(Conflict3Way):
-    def __init__(self, line_number: int, left: str, right: str, sep1: str, sep3: str, sep4: str):
-        super().__init__(line_number, left, "", right, sep1, "", sep3, sep4)
+    def __init__(self, line_number: int, line_num_left: int, line_num_right: int,
+                 left: str, right: str, sep1: str, sep3: str, sep4: str):
+
+        super().__init__(line_number, line_num_left, line_num_right, left, "", right, sep1, "", sep3, sep4)
 
     def result(self, choice: Choice = None) -> str:
         _choice = self.choice if not choice else choice
@@ -95,8 +97,8 @@ class ConflictBuilder:
         self.has_base = False
 
         self.line_number = -1
-        self.line_number_left = -1
-        self.line_number_right = -1
+        self.line_num_left = -1
+        self.line_num_right = -1
 
         self.left = ""
         self.base = ""
@@ -109,8 +111,8 @@ class ConflictBuilder:
 
     def build(self):
         if self.has_base:
-            return Conflict3Way(self.line_number, self.line_number_left, self.line_number_right,
+            return Conflict3Way(self.line_number, self.line_num_left, self.line_num_right,
                                 self.left, self.base, self.right, self.sep1, self.sep2, self.sep3, self.sep4)
         else:
-            return Conflict2Way(self.line_number, self.line_number_left, self.line_number_right,
+            return Conflict2Way(self.line_number, self.line_num_left, self.line_num_right,
                                 self.left, self.right, self.sep1, self.sep3, self.sep4)

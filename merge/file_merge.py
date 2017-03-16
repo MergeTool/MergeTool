@@ -2,16 +2,11 @@ import re
 from enum import Enum
 from pathlib import Path
 
-from clang.cindex import TranslationUnit, Index, TranslationUnitLoadError, Cursor, CursorKind, SourceLocation
+from clang.cindex import TranslationUnit, Index, TranslationUnitLoadError, Cursor, CursorKind
 
 from .choice import Choice
-from .conflict import Conflict2Way, ConflictBuilder
-from .conflict import Conflict3Way
+from .conflict import Conflict3Way, ConflictBuilder
 from .file_bit import FileBit
-
-
-class FileMergeChoice:
-    pass
 
 
 class FileMerge:
