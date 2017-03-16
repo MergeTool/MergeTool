@@ -10,14 +10,18 @@ int main()
    int n, status = 1, num = 3, count, c;
  
    cout << "Enter the number of prime numbers to print\n";
+   if(true)
+   {
 <<<<<<< HEAD
-   cin >> n;
-   n += 1;
-   printf("left");
+	   cin >> n;
+	   n += 1;
+	   printf("left");
+   }
 =======
-   scanf("%d", &n);
-   n -= 1;
-   printf("right");
+	   scanf("%d", &n);
+	   n -= 1;
+	   printf("right");
+   }
 >>>>>>> master
  
    if ( n >= 1 )
@@ -28,7 +32,7 @@ int main()
  
    for ( count = 2 ; count <=n ;  )
    {
-      for ( c = 2 ; c <= (int)sqrt(num) ; c++ )
+      for ( c = 2 ; c <= num ; c++ )
       {
 <<<<<<< HEAD
          if ( num%c == 0 )
@@ -60,6 +64,19 @@ int main()
       }
       status = 1;
       num++;
+
+<<<<<<< HEAD
+         if ( num%c == 0 )
+         {
+            status = 0;
+            break;
+=======
+         if ( num/c == 0 )
+         {
+            status = -1;
+            continue;
+>>>>>>> master
+		 }
    }         
  
    return 0;

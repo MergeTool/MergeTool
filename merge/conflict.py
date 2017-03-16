@@ -2,9 +2,13 @@ from .choice import Choice
 
 
 class Conflict3Way:
-    def __init__(self, line_number: int, left: str, base: str, right: str, sep1: str, sep2: str, sep3: str, sep4: str):
+    def __init__(self, line_number: int, line_num_left: int, line_num_right: int,
+                 left: str, base: str, right: str, sep1: str, sep2: str, sep3: str, sep4: str):
 
         self.line_number = line_number
+        self.line_num_left = line_num_left
+        self.line_num_right = line_num_right
+
         self.left = left
         self.base = base
         self.right = right
@@ -14,7 +18,6 @@ class Conflict3Way:
         self.sep3 = sep3
         self.sep4 = sep4
 
-        self._select = None
         self.choice = Choice.undesided
 
     def is_resolved(self) -> bool:
@@ -23,14 +26,16 @@ class Conflict3Way:
     def select(self, choice: Choice):
         self.choice = choice
 
-    def result(self) -> str:
-        if self.choice is Choice.undesided:
+    def result(self, choice: Choice = None) -> str:
+        _choice = self.choice if not choice else choice
+
+        if _choice is Choice.undesided:
             return self.sep1 + self.left + self.sep2 + self.base + self.sep3 + self.right + self.sep4
-        elif self.choice is Choice.left:
+        elif _choice is Choice.left:
             return self.left
-        elif self.choice is Choice.right:
+        elif _choice is Choice.right:
             return self.right
-        elif self.choice is Choice.both:
+        elif _choice is Choice.both:
             return self.left + self.right
         else:
             raise ValueError
@@ -38,10 +43,43 @@ class Conflict3Way:
     def description(self):
         return "\n left = \n" + self.left + "\n right = \n" + self.right + "\n base = \n" + self.base
 
+    def extend_top_up(self, chunk: str):
+        line_num = chunk.count('\n')
+        self.line_number -= line_num
+        self.line_num_left -= line_num
+        self.line_num_right -= line_num
+        self.left = chunk + self.left
+        self.base = chunk + self.base
+        self.right = chunk + self.right
+
+    def extend_bottom_down(self, chunk: str):
+        self.left += chunk
+        self.base += chunk
+        self.right += chunk
+
+    def start(self, choice: Choice):
+        if choice is Choice.left:
+            return self.line_num_left
+        elif choice is Choice.right:
+            return self.line_num_right
+        else:
+            raise ValueError
+
+    def end(self, choice: Choice):
+        return self.start(choice) + len(self.result(choice).splitlines())
+
 
 class Conflict2Way(Conflict3Way):
     def __init__(self, line_number: int, left: str, right: str, sep1: str, sep3: str, sep4: str):
         super().__init__(line_number, left, "", right, sep1, "", sep3, sep4)
+
+    def result(self, choice: Choice = None) -> str:
+        _choice = self.choice if not choice else choice
+
+        if _choice is Choice.undesided:
+            return self.sep1 + self.left + self.sep3 + self.right + self.sep4
+        else:
+            return super().result(_choice)
 
     def description(self) -> str:
         return "\n left = \n" + self.left + "\n right = \n" + self.right
@@ -57,6 +95,9 @@ class ConflictBuilder:
         self.has_base = False
 
         self.line_number = -1
+        self.line_number_left = -1
+        self.line_number_right = -1
+
         self.left = ""
         self.base = ""
         self.right = ""
@@ -68,6 +109,8 @@ class ConflictBuilder:
 
     def build(self):
         if self.has_base:
-            return Conflict3Way(self.line_number, self.left, self.base, self.right, self.sep1, self.sep2, self.sep3, self.sep4)
+            return Conflict3Way(self.line_number, self.line_number_left, self.line_number_right,
+                                self.left, self.base, self.right, self.sep1, self.sep2, self.sep3, self.sep4)
         else:
-            return Conflict2Way(self.line_number, self.left, self.right, self.sep1, self.sep3, self.sep4)
+            return Conflict2Way(self.line_number, self.line_number_left, self.line_number_right,
+                                self.left, self.right, self.sep1, self.sep3, self.sep4)
