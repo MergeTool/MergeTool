@@ -7,6 +7,7 @@ class FileBit:
         self.line_number += num
         lines = self.text.splitlines(keepends=True)
 
+        assert num > 0  # to be symmetrical with `shrink_bottom_up`
         assert len(lines) >= num
 
         self.text = "".join(lines[num:])
@@ -15,6 +16,7 @@ class FileBit:
     def shrink_bottom_up(self, num: int) -> str:
         lines = self.text.splitlines(keepends=True)
 
+        assert num > 0
         assert len(lines) >= num
 
         self.text = "".join(lines[:-num])
