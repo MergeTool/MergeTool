@@ -23,6 +23,6 @@ def parse_cli_args():
     if args.union:
         args.choice = Choice.both
     else:
-        args.choice = Choice.undesided
+        args.choice = Choice.undecided
 
     return args

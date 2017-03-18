@@ -103,7 +103,7 @@ class FileMerge:
                 conflict = intersecting_conflicts[0]
                 i = self.conflicts.index(conflict)
                 file_bit = self.file_bits[i + 1]
-                # assert file_bit.line_number == conflict.line_number + len(conflict.result(Choice.undesided).splitlines())
+                # assert file_bit.line_number == conflict.line_number + len(conflict.result(Choice.undecided).splitlines())
 
                 num = block.extent.end.line - conflict.end(_choice)
                 chunk = file_bit.shrink_top_down(num)

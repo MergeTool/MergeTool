@@ -18,7 +18,7 @@ class Conflict3Way:
         self.sep3 = sep3
         self.sep4 = sep4
 
-        self.choice = Choice.undesided
+        self.choice = Choice.undecided
 
     def is_resolved(self) -> bool:
         return self.choice.is_resolved()
@@ -29,7 +29,7 @@ class Conflict3Way:
     def result(self, choice: Choice = None) -> str:
         _choice = self.choice if not choice else choice
 
-        if _choice is Choice.undesided:
+        if _choice is Choice.undecided:
             return self.sep1 + self.left + self.sep2 + self.base + self.sep3 + self.right + self.sep4
         elif _choice is Choice.left:
             return self.left
@@ -78,7 +78,7 @@ class Conflict2Way(Conflict3Way):
     def result(self, choice: Choice = None) -> str:
         _choice = self.choice if not choice else choice
 
-        if _choice is Choice.undesided:
+        if _choice is Choice.undecided:
             return self.sep1 + self.left + self.sep3 + self.right + self.sep4
         else:
             return super().result(_choice)
