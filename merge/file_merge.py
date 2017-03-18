@@ -3,6 +3,7 @@ from enum import Enum
 from pathlib import Path
 
 from clang.cindex import TranslationUnit, Index, TranslationUnitLoadError, Cursor, CursorKind
+from io import TextIOBase
 
 from .choice import Choice
 from .conflict import Conflict3Way, ConflictBuilder
@@ -131,18 +132,18 @@ class FileMerge:
         return nodes
 
     @staticmethod
-    def parse(path: Path):  # -> FileMerge:
+    def parse(path: Path, stream: TextIOBase):  # -> FileMerge:
         class State(Enum):
             text = 1
             left = 2
             base = 3
             right = 4
 
+        assert stream.readable()
+
         if not FileMerge.can_parse(path):
             text = path.read_text(encoding="latin-1")
             return FileMerge(path, [FileBit(0, text)], [])
-
-        stream = path.open('r', encoding="latin-1")
 
         fileobj_lines = stream.readlines()
         file_bits = []

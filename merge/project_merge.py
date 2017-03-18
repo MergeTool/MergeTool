@@ -66,6 +66,7 @@ class ProjectMerge:
     def parse(path: Path, tmp_path: Path):  # -> ProjectMerge:
         merges = []
         for file in path.iterdir():
-            merges.append(FileMerge.parse(file))
+            stream = file.open('r', encoding="latin-1")
+            merges.append(FileMerge.parse(file, stream))
 
         return ProjectMerge(path, tmp_path, merges)

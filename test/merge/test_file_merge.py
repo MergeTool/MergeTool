@@ -1,3 +1,4 @@
+from io import StringIO
 from pathlib import Path
 from unittest import TestCase
 
@@ -183,3 +184,52 @@ class TestFileMerge(TestCase):
         default = self.file_merge.abstract_syntax_tree()
         left = self.file_merge.abstract_syntax_tree(Choice.left)
         self.assertEqual(default, left)
+
+    def test_extract_children(self):
+        root = self.file_merge.abstract_syntax_tree(Choice.left).cursor
+        children = FileMerge.extract_children(root,
+                                              [CursorKind.FUNCTION_DECL, CursorKind.IF_STMT, CursorKind.WHILE_STMT])
+
+        extracted_features = [(ch.kind, ch.extent.start.line) for ch in children]
+        correct_features = [(CursorKind.FUNCTION_DECL, 1), (CursorKind.IF_STMT, 2), (CursorKind.WHILE_STMT, 10)]
+
+        self.assertListEqual(extracted_features, correct_features)
+
+    def test_parse(self):
+        text = ("int main() {\n"
+                "   if(true)\n"
+                "   {\n"
+                "	   cin >> n;\n"
+                "	   n += 1;\n"
+                "	   printf(\"left\");\n"
+                "   }\n"
+                "<<<\n"
+                "   int x = 0;\n"
+                "   x = 0;\n"
+                "===\n"
+                "   int y = 3;\n"
+                ">>>\n"
+                "   while(true) {\n"
+                "	   cin >> n;\n"
+                "	   n += 1;\n"
+                "	   printf(\"left\");\n"
+                "   }\n"
+                "<<<\n"
+                "   x = 0;\n"
+                "===\n"
+                "   y = 2;\n"
+                ">>>\n"
+                "   return 0;\n"
+                "}\n")
+
+        parsed_file = FileMerge.parse(Path("./testproject/prog.cpp"), StringIO(text))
+
+        self.assertEqual(text, parsed_file.result(Choice.undecided))
+
+    def test_can_parse(self):
+        self.assertTrue(FileMerge.can_parse(Path("./testproject/prog.cpp")))
+        self.assertTrue(FileMerge.can_parse(Path("/Users/voddan/MergeTool/prototype/testproject/prog.hpp")))
+        self.assertTrue(FileMerge.can_parse(Path("testproject/prog.c")))
+        self.assertTrue(FileMerge.can_parse(Path("testproject/prog.h")))
+        self.assertFalse(FileMerge.can_parse(Path("testproject/h")))
+        self.assertFalse(FileMerge.can_parse(Path("testproject/prog.log")))
