@@ -29,7 +29,7 @@ class TestFileMerge(TestCase):
         Config.set_library_file("/usr/local/opt/llvm/lib/libclang.dylib")
 
     def setUp(self):
-        self.fb1 = FileBit(0, ("int main() {\n"
+        self.fb1 = FileBit(1, ("int main() {\n"
                                "   if(true)\n"
                                "   {\n"
                                "	   cin >> n;\n"
@@ -37,21 +37,21 @@ class TestFileMerge(TestCase):
                                "	   printf(\"left\");\n"
                                "   }\n"))
 
-        self.ct1 = Conflict2Way(7, 7, 7,
+        self.ct1 = Conflict2Way(8, 8, 8,
                                 "   int x = 0;\n"
                                 "   x = 0;\n",
                                 "   int y = 3;\n",
                                 "<<<\n", "===\n", ">>>\n")
 
-        self.fb2 = FileBit(13, ("   while(true) {\n"
+        self.fb2 = FileBit(14, ("   while(true) {\n"
                                 "	   cin >> n;\n"
                                 "	   n += 1;\n"
                                 "	   printf(\"left\");\n"
                                 "   }\n"))
 
-        self.ct2 = Conflict2Way(18, 14, 13, "   x = 0;\n", "   y = 2;\n", "<<<\n", "===\n", ">>>\n")
+        self.ct2 = Conflict2Way(19, 15, 14, "   x = 0;\n", "   y = 2;\n", "<<<\n", "===\n", ">>>\n")
 
-        self.fb3 = FileBit(23, "   return 0;\n"
+        self.fb3 = FileBit(24, "   return 0;\n"
                                "}\n")
 
         self.file_merge = FileMerge(Path("./testproject/prog.cpp"),
@@ -185,6 +185,15 @@ class TestFileMerge(TestCase):
         left = self.file_merge.abstract_syntax_tree(Choice.left)
         self.assertEqual(default, left)
 
+    def test_refactor_syntax_blocks(self):
+        before = self.file_merge.result(Choice.undecided)
+        self.file_merge.refactor_syntax_blocks()
+        after = self.file_merge.result(Choice.undecided)
+
+        print(before)
+        print(after)
+        self.assertEqual(before, after)  # `self.file_merge` contains no problematic conflicts
+
     def test_extract_children(self):
         root = self.file_merge.abstract_syntax_tree(Choice.left).cursor
         children = FileMerge.extract_children(root,
@@ -224,6 +233,7 @@ class TestFileMerge(TestCase):
 
         parsed_file = FileMerge.parse(Path("./testproject/prog.cpp"), StringIO(text))
 
+        # TODO: make sure it parses !
         self.assertEqual(text, parsed_file.result(Choice.undecided))
 
     def test_can_parse(self):
