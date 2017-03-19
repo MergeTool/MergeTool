@@ -20,6 +20,16 @@ class Conflict3Way:
 
         self.choice = Choice.undecided
 
+    def __eq__(self, other):
+        return isinstance(self, Conflict3Way) and\
+               (self.line_number, self.line_num_left, self.line_num_right,
+                self.left, self.base, self.right,
+                self.sep1, self.sep2, self.sep3, self.sep4
+                ) == (
+                   other.line_number, other.line_num_left, other.line_num_right,
+                   other.left, other.base, other.right,
+                   other.sep1, other.sep2, other.sep3, other.sep4)
+
     def is_resolved(self) -> bool:
         return self.choice.is_resolved()
 

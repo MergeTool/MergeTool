@@ -1,3 +1,4 @@
+from copy import copy
 from io import StringIO
 from pathlib import Path
 from unittest import TestCase
@@ -41,7 +42,7 @@ class TestFileMerge(TestCase):
                                 "   int x = 0;\n"
                                 "   x = 0;\n",
                                 "   int y = 3;\n",
-                                "<<<\n", "===\n", ">>>\n")
+                                "<<<<<<<\n", "=======\n", ">>>>>>>\n")
 
         self.fb2 = FileBit(14, ("   while(true) {\n"
                                 "	   cin >> n;\n"
@@ -49,7 +50,7 @@ class TestFileMerge(TestCase):
                                 "	   printf(\"left\");\n"
                                 "   }\n"))
 
-        self.ct2 = Conflict2Way(19, 15, 14, "   x = 0;\n", "   y = 2;\n", "<<<\n", "===\n", ">>>\n")
+        self.ct2 = Conflict2Way(19, 15, 14, "   x = 0;\n", "   y = 2;\n", "<<<<<<<\n", "=======\n", ">>>>>>>\n")
 
         self.fb3 = FileBit(24, "   return 0;\n"
                                "}\n")
@@ -93,11 +94,11 @@ class TestFileMerge(TestCase):
                                 "	   n += 1;\n"
                                 "	   printf(\"left\");\n"
                                 "   }\n"
-                                "<<<\n"
+                                "<<<<<<<\n"
                                 "   x = 0;\n"
-                                "===\n"
+                                "=======\n"
                                 "   y = 2;\n"
-                                ">>>\n"
+                                ">>>>>>>\n"
                                 "   return 0;\n"
                                 "}\n"))
 
@@ -183,16 +184,30 @@ class TestFileMerge(TestCase):
     def test_abstract_syntax_tree_default(self):
         default = self.file_merge.abstract_syntax_tree()
         left = self.file_merge.abstract_syntax_tree(Choice.left)
-        self.assertEqual(default, left)
+
+        kinds = [CursorKind.FUNCTION_DECL, CursorKind.IF_STMT, CursorKind.WHILE_STMT, CursorKind.BINARY_OPERATOR]
+
+        self.assertListEqual([ch.kind for ch in FileMerge.extract_children(default.cursor, kinds)],
+                             [ch.kind for ch in FileMerge.extract_children(left.cursor, kinds)])
+
+    def test_abstract_syntax_tree_cache(self):
+        left1 = self.file_merge.abstract_syntax_tree(Choice.left)
+        left2 = self.file_merge.abstract_syntax_tree(Choice.left)
+        right = self.file_merge.abstract_syntax_tree(Choice.right)
+        left3 = self.file_merge.abstract_syntax_tree(Choice.left)
+
+        self.assertEqual(left1, left2)
+        self.assertNotEqual(left2, right)
+        self.assertNotEqual(right, left3)
 
     def test_refactor_syntax_blocks(self):
-        before = self.file_merge.result(Choice.undecided)
+        before = copy(self.file_merge)
         self.file_merge.refactor_syntax_blocks()
-        after = self.file_merge.result(Choice.undecided)
 
-        print(before)
-        print(after)
-        self.assertEqual(before, after)  # `self.file_merge` contains no problematic conflicts
+        # `self.file_merge` contains no problematic conflicts
+        self.assertEqual(self.file_merge.path, before.path)
+        self.assertListEqual(self.file_merge.file_bits, before.file_bits)
+        self.assertListEqual(self.file_merge.conflicts, before.conflicts)
 
     def test_extract_children(self):
         root = self.file_merge.abstract_syntax_tree(Choice.left).cursor
@@ -212,29 +227,30 @@ class TestFileMerge(TestCase):
                 "	   n += 1;\n"
                 "	   printf(\"left\");\n"
                 "   }\n"
-                "<<<\n"
+                "<<<<<<<\n"
                 "   int x = 0;\n"
                 "   x = 0;\n"
-                "===\n"
+                "=======\n"
                 "   int y = 3;\n"
-                ">>>\n"
+                ">>>>>>>\n"
                 "   while(true) {\n"
                 "	   cin >> n;\n"
                 "	   n += 1;\n"
                 "	   printf(\"left\");\n"
                 "   }\n"
-                "<<<\n"
+                "<<<<<<<\n"
                 "   x = 0;\n"
-                "===\n"
+                "=======\n"
                 "   y = 2;\n"
-                ">>>\n"
+                ">>>>>>>\n"
                 "   return 0;\n"
                 "}\n")
 
         parsed_file = FileMerge.parse(Path("./testproject/prog.cpp"), StringIO(text))
 
-        # TODO: make sure it parses !
-        self.assertEqual(text, parsed_file.result(Choice.undecided))
+        self.assertEqual(parsed_file.path, self.file_merge.path)
+        self.assertListEqual(parsed_file.file_bits, self.file_merge.file_bits)
+        self.assertListEqual(parsed_file.conflicts, self.file_merge.conflicts)
 
     def test_can_parse(self):
         self.assertTrue(FileMerge.can_parse(Path("./testproject/prog.cpp")))
