@@ -82,7 +82,7 @@ class FileMerge:
         for block in if_blocks:
             intersecting_conflicts = [conflict for conflict in self.conflicts
                                       if block.extent.start.line < conflict.start(_choice) <=
-                                      block.extent.end.line <= conflict.end(_choice)]
+                                      block.extent.end.line < conflict.end(_choice)]
 
             if len(intersecting_conflicts) > 0:
                 conflict = intersecting_conflicts[0]
