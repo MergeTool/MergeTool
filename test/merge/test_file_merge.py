@@ -6,7 +6,7 @@ from unittest import TestCase
 from clang.cindex import Cursor, CursorKind
 
 from merge.choice import Choice
-from merge.conflict import Conflict2Way
+from merge.conflict import Conflict2Way, Conflict3Way
 from merge.file_bit import FileBit
 from merge.file_merge import FileMerge
 
@@ -50,9 +50,10 @@ class TestFileMerge(TestCase):
                                 "	   printf(\"left\");\n"
                                 "   }\n"))
 
-        self.ct2 = Conflict2Way(19, 15, 14, "   x = 0;\n", "   y = 2;\n", "<<<<<<<\n", "=======\n", ">>>>>>>\n")
+        self.ct2 = Conflict3Way(19, 15, 14, "   x = 0;\n", """   printf("Hello!")\n""", "   y = 2;\n",
+                                "<<<<<<<\n", "|||||||\n", "=======\n", ">>>>>>>\n")
 
-        self.fb3 = FileBit(24, "   return 0;\n"
+        self.fb3 = FileBit(26, "   return 0;\n"
                                "}\n")
 
         self.file_merge = FileMerge(Path("./testproject/prog.cpp"),
@@ -96,6 +97,8 @@ class TestFileMerge(TestCase):
                                 "   }\n"
                                 "<<<<<<<\n"
                                 "   x = 0;\n"
+                                "|||||||\n"
+                                "   printf(\"Hello!\")\n"
                                 "=======\n"
                                 "   y = 2;\n"
                                 ">>>>>>>\n"
@@ -240,6 +243,8 @@ class TestFileMerge(TestCase):
                 "   }\n"
                 "<<<<<<<\n"
                 "   x = 0;\n"
+                "|||||||\n"
+                "   printf(\"Hello!\")\n"
                 "=======\n"
                 "   y = 2;\n"
                 ">>>>>>>\n"
