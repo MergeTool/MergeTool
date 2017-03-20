@@ -26,8 +26,8 @@ Cursor.__str__ = short_info
 class TestFileMerge(TestCase):
     @classmethod
     def setUpClass(cls):
-        from clang.cindex import Config
-        Config.set_library_file("/usr/local/opt/llvm/lib/libclang.dylib")
+        from merge.external_parser_setup import ExternalParserSetup
+        ExternalParserSetup.setup()
 
     def setUp(self):
         self.fb1 = FileBit(1, ("int main() {\n"
