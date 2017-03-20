@@ -6,12 +6,12 @@ from clang.cindex import TranslationUnit, Index, TranslationUnitLoadError, Curso
 from io import TextIOBase
 
 from .choice import Choice
-from .conflict import Conflict3Way, ConflictBuilder
+from .conflict import ConflictBuilder, Conflict
 from .file_bit import FileBit
 
 
 class FileMerge:
-    def __init__(self, path: Path, file_bits: [FileBit], conflicts: [Conflict3Way]):
+    def __init__(self, path: Path, file_bits: [FileBit], conflicts: [Conflict]):
         self.path = path
         self.file_bits = file_bits
         self.conflicts = conflicts

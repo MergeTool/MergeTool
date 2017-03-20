@@ -97,6 +97,10 @@ class Conflict2Way(Conflict3Way):
         return "\n left = \n" + self.left + "\n right = \n" + self.right
 
 
+"""A type alias for exporting into other modules"""
+Conflict = Conflict3Way
+
+
 class ConflictBuilder:
     sep1_marker = "<<<<<<<"
     sep2_marker = "|||||||"
@@ -119,7 +123,7 @@ class ConflictBuilder:
         self.sep3 = ConflictBuilder.sep3_marker + '\n'
         self.sep4 = ConflictBuilder.sep4_marker + '\n'
 
-    def build(self):
+    def build(self) -> Conflict:
         if self.has_base:
             return Conflict3Way(self.line_number, self.line_num_left, self.line_num_right,
                                 self.left, self.base, self.right, self.sep1, self.sep2, self.sep3, self.sep4)
