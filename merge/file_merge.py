@@ -76,13 +76,14 @@ class FileMerge:
         if not ast:
             return
 
-        if_blocks = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
+        if_statements = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
+        if_blocks = [b for stmt in if_statements for b in list(stmt.get_children())[1:]]
+        all_blocks = FileMerge.extract_children(ast.cursor, [CursorKind.COMPOUND_STMT])
 
-        for i in if_blocks:
-            print([i.kind, i.extent.start.line])
+        blocks = if_statements + if_blocks
 
         # situation: `{ <<< } >>>`
-        for block in if_blocks:
+        for block in blocks:
             intersecting_conflicts = [conflict for conflict in self.conflicts
                                       if block.extent.start.line < conflict.start(_choice) <=
                                       block.extent.end.line < conflict.end(_choice)]
@@ -98,7 +99,7 @@ class FileMerge:
                 conflict.extend_top_up(chunk)
 
         # situation: `<<< { >>> }`
-        for block in if_blocks:
+        for block in blocks:
             intersecting_conflicts = [conflict for conflict in self.conflicts
                                       if conflict.start(_choice) <= block.extent.start.line <
                                       conflict.end(_choice) <= block.extent.end.line]
