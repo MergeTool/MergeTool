@@ -3,24 +3,13 @@ from io import StringIO
 from pathlib import Path
 from unittest import TestCase
 
-from clang.cindex import Cursor, CursorKind
+from clang.cindex import CursorKind
 
 from merge.choice import Choice
 from merge.conflict import Conflict2Way, Conflict3Way
 from merge.file_bit import FileBit
 from merge.file_merge import FileMerge
-
-
-def get_child(self: Cursor, n: int) -> Cursor:
-    return list(self.get_children())[n]
-
-
-def short_info(self: Cursor):
-    return "%s at %d with %d kid(s)" % (self.kind.name, self.extent.start.line, len(list(self.get_children())))
-
-
-Cursor.child = get_child
-Cursor.__str__ = short_info
+import merge.cursor_utils
 
 
 class TestFileMerge(TestCase):
