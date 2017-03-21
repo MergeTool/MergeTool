@@ -668,3 +668,55 @@ class TestRefactorMultipleBlocks(TestCase):
         file_merge.refactor_syntax_blocks()
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
+
+    def test_conflict_at_2_nested_if_blocks_starts(self):
+        code = multiline("""
+                int main() {
+                <<<<<<< HEAD
+                    if(1 > 2) {
+                        printf("Hello!")
+                        if(True) {
+                =======
+                    if(1 < 2) {
+                        printf("Hello!")
+                        if(False) {
+                >>>>>>> master
+                            int z;
+                            z = 10;
+                        }
+                        int n = 0;
+                        n += 1;
+                    }
+                }
+                """)
+
+        expected = multiline("""
+                int main() {
+                <<<<<<< HEAD
+                    if(1 > 2) {
+                        printf("Hello!")
+                        if(True) {
+                            int z;
+                            z = 10;
+                        }
+                        int n = 0;
+                        n += 1;
+                    }
+                =======
+                    if(1 < 2) {
+                        printf("Hello!")
+                        if(False) {
+                            int z;
+                            z = 10;
+                        }
+                        int n = 0;
+                        n += 1;
+                    }
+                >>>>>>> master
+                }
+                """)
+
+        file_merge = FileMerge.parse(Path("prog.c"), StringIO(code))
+        file_merge.refactor_syntax_blocks()
+        refactored = file_merge.result()
+        self.assertEqual(expected, refactored)
