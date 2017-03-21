@@ -41,8 +41,11 @@ class FileMerge:
         return "".join(bits)
 
     def abstract_syntax_tree(self, choice: Choice = Choice.left) -> TranslationUnit:
-        """ AST of the `choice` version of this file or `None` if a error occurred """
-        """ The result is cashed """
+        """
+        AST of the `choice` version of this file or `None` if an error occurred
+
+        The last result is cashed
+        """
         if self._translation_unit and self._translation_unit_choice == choice:
             return self._translation_unit
 
