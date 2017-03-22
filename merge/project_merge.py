@@ -42,7 +42,7 @@ class ProjectMerge:
         for file in self.files:
             relative_path = file.path.relative_to(self.path)
             path = buf_path / relative_path
-            path.write_text(file.result(), encoding="latin-1")
+            path.write_text(file.result(), encoding="utf-8")
 
     def compile_print(self):
         self.write_result_tmp()
