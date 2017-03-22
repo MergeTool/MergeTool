@@ -147,7 +147,7 @@ class FileMerge:
         assert stream.readable()
 
         if not FileMerge.can_parse(path):
-            text = path.read_text(encoding="latin-1")
+            text = path.read_text(encoding="utf-8")
             return FileMerge(path, [FileBit(1, text)], [])
 
         fileobj_lines = stream.readlines()
