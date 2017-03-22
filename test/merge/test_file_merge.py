@@ -248,7 +248,7 @@ class TestFileMerge(TestCase):
 
     def test_can_parse(self):
         self.assertTrue(FileMerge.can_parse(Path("./testproject/prog.cpp")))
-        self.assertTrue(FileMerge.can_parse(Path("/Users/voddan/MergeTool/prototype/testproject/prog.hpp")))
+        self.assertTrue(FileMerge.can_parse(Path("/Users/admin/testproject/prog.hpp")))
         self.assertTrue(FileMerge.can_parse(Path("testproject/prog.c")))
         self.assertTrue(FileMerge.can_parse(Path("testproject/prog.h")))
         self.assertFalse(FileMerge.can_parse(Path("testproject/h")))
