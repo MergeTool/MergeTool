@@ -8,6 +8,7 @@ from io import TextIOBase
 from .choice import Choice
 from .conflict import ConflictBuilder, Conflict
 from .file_bit import FileBit
+from .block import Block
 
 
 class FileMerge:
@@ -77,40 +78,37 @@ class FileMerge:
             return
 
         if_statements = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
-        if_blocks = [b for stmt in if_statements for b in list(stmt.get_children())[1:]]
-        all_blocks = FileMerge.extract_children(ast.cursor, [CursorKind.COMPOUND_STMT])
+        # all_blocks = FileMerge.extract_children(ast.cursor, [CursorKind.COMPOUND_STMT])
 
-        blocks = if_statements + if_blocks
+        blocks = [block for stmt in if_statements for block in Block.structure_of_IF(stmt)]
 
         # situation: `{ <<< } >>>`
         for block in blocks:
             intersecting_conflicts = [conflict for conflict in self.conflicts
-                                      if block.extent.start.line < conflict.start(_choice) <=
-                                      block.extent.end.line < conflict.end(_choice)]
+                                      if block.start < conflict.start(_choice) <=
+                                      block.end < conflict.end(_choice)]
 
             if len(intersecting_conflicts) > 0:
                 conflict = intersecting_conflicts[0]
                 i = self.conflicts.index(conflict)
                 file_bit = self.file_bits[i]
-                # assert file_bit.line_number + len(file_bit.text.splitlines()) == conflict.line_number
 
-                num = conflict.start(_choice) - block.extent.start.line
+                num = conflict.start(_choice) - block.start
                 chunk = file_bit.shrink_bottom_up(num)
                 conflict.extend_top_up(chunk)
 
         # situation: `<<< { >>> }`
         for block in blocks:
             intersecting_conflicts = [conflict for conflict in self.conflicts
-                                      if conflict.start(_choice) <= block.extent.start.line <
-                                      conflict.end(_choice) <= block.extent.end.line]
+                                      if conflict.start(_choice) <= block.start <
+                                      conflict.end(_choice) <= block.end]
 
             if len(intersecting_conflicts) > 0:
                 conflict = intersecting_conflicts[0]
                 i = self.conflicts.index(conflict)
                 file_bit = self.file_bits[i + 1]
-                # assert file_bit.line_number == conflict.line_number + len(conflict.result(Choice.undecided).splitlines())
 
-                num = block.extent.end.line - conflict.end(_choice) + 1
+                num = block.end - conflict.end(_choice) + 1
                 chunk = file_bit.shrink_top_down(num)
                 conflict.extend_bottom_down(chunk)
 
