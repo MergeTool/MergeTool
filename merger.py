@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 from pathlib import Path
 
+from merge.external_parser_setup import ExternalParserSetup
 from ui.cli_args import parse_cli_args
 from ui.cli_event_loop import resolve_conflicts_event_loop
 from merge.project_merge import ProjectMerge
 
 
 if __name__ == "__main__":
-    from clang.cindex import Config
-    Config.set_library_file("/usr/local/opt/llvm/lib/libclang.dylib")
+    ExternalParserSetup.setup()
 
     args = parse_cli_args()
     project_path = Path(args.project_path)

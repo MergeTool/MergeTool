@@ -3,14 +3,15 @@ from enum import Enum
 from pathlib import Path
 
 from clang.cindex import TranslationUnit, Index, TranslationUnitLoadError, Cursor, CursorKind
+from io import TextIOBase
 
 from .choice import Choice
-from .conflict import Conflict3Way, ConflictBuilder
+from .conflict import ConflictBuilder, Conflict
 from .file_bit import FileBit
 
 
 class FileMerge:
-    def __init__(self, path: Path, file_bits: [FileBit], conflicts: [Conflict3Way]):
+    def __init__(self, path: Path, file_bits: [FileBit], conflicts: [Conflict]):
         self.path = path
         self.file_bits = file_bits
         self.conflicts = conflicts
@@ -40,8 +41,11 @@ class FileMerge:
         return "".join(bits)
 
     def abstract_syntax_tree(self, choice: Choice = Choice.left) -> TranslationUnit:
-        """ AST of the `choice` version of this file or `None` if a error occurred """
-        """ The result is cashed """
+        """
+        AST of the `choice` version of this file or `None` if an error occurred
+
+        The last result is cashed
+        """
         if self._translation_unit and self._translation_unit_choice == choice:
             return self._translation_unit
 
@@ -72,16 +76,17 @@ class FileMerge:
         if not ast:
             return
 
-        if_blocks = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
+        if_statements = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
+        if_blocks = [b for stmt in if_statements for b in list(stmt.get_children())[1:]]
+        all_blocks = FileMerge.extract_children(ast.cursor, [CursorKind.COMPOUND_STMT])
 
-        for i in if_blocks:
-            print([i.kind, i.extent.start.line])
+        blocks = if_statements + if_blocks
 
         # situation: `{ <<< } >>>`
-        for block in if_blocks:
+        for block in blocks:
             intersecting_conflicts = [conflict for conflict in self.conflicts
-                                      if block.extent.start.line <= conflict.start(_choice) <=
-                                      block.extent.end.line <= conflict.end(_choice)]
+                                      if block.extent.start.line < conflict.start(_choice) <=
+                                      block.extent.end.line < conflict.end(_choice)]
 
             if len(intersecting_conflicts) > 0:
                 conflict = intersecting_conflicts[0]
@@ -89,23 +94,23 @@ class FileMerge:
                 file_bit = self.file_bits[i]
                 # assert file_bit.line_number + len(file_bit.text.splitlines()) == conflict.line_number
 
-                num = conflict.start(_choice) - block.extent.start.line + 1
+                num = conflict.start(_choice) - block.extent.start.line
                 chunk = file_bit.shrink_bottom_up(num)
                 conflict.extend_top_up(chunk)
 
         # situation: `<<< { >>> }`
-        for block in if_blocks:
+        for block in blocks:
             intersecting_conflicts = [conflict for conflict in self.conflicts
-                                      if conflict.start(_choice) <= block.extent.start.line <=
+                                      if conflict.start(_choice) <= block.extent.start.line <
                                       conflict.end(_choice) <= block.extent.end.line]
 
             if len(intersecting_conflicts) > 0:
                 conflict = intersecting_conflicts[0]
                 i = self.conflicts.index(conflict)
                 file_bit = self.file_bits[i + 1]
-                # assert file_bit.line_number == conflict.line_number + len(conflict.result(Choice.undesided).splitlines())
+                # assert file_bit.line_number == conflict.line_number + len(conflict.result(Choice.undecided).splitlines())
 
-                num = block.extent.end.line - conflict.end(_choice)
+                num = block.extent.end.line - conflict.end(_choice) + 1
                 chunk = file_bit.shrink_top_down(num)
                 conflict.extend_bottom_down(chunk)
 
@@ -131,38 +136,41 @@ class FileMerge:
         return nodes
 
     @staticmethod
-    def parse(path: Path):  # -> FileMerge:
+    def parse(path: Path, stream: TextIOBase):  # -> FileMerge:
+        """ Note that the number of the first line of a file is `1` """
         class State(Enum):
             text = 1
             left = 2
             base = 3
             right = 4
 
-        if not FileMerge.can_parse(path):
-            text = path.read_text(encoding="latin-1")
-            return FileMerge(path, [FileBit(0, text)], [])
+        assert stream.readable()
 
-        stream = path.open('r', encoding="latin-1")
+        if not FileMerge.can_parse(path):
+            text = path.read_text(encoding="utf-8")
+            return FileMerge(path, [FileBit(1, text)], [])
 
         fileobj_lines = stream.readlines()
         file_bits = []
         conflicts = []
 
         state = State.text
-        file_bit = FileBit(0, "")
+        file_bit = FileBit(1, "")
         conflict = ConflictBuilder()
 
-        line_num_left = 0
-        line_num_right = 0
+        line_num_left = 1
+        line_num_right = 1
         for index, line in enumerate(fileobj_lines):
             switch = line[0:7]
+
+            line_number = index + 1  # the first line of a file is #1
 
             if state == State.text:
                 if switch == ConflictBuilder.sep1_marker:
                     state = State.left
                     file_bits.append(file_bit)
-                    file_bit = FileBit(0, "")
-                    conflict.line_number = index
+                    file_bit = FileBit(-1, "")  # the `line_number` will be overridden
+                    conflict.line_number = line_number
                     conflict.line_num_left = line_num_left
                     conflict.sep1 = line
                 else:
@@ -198,7 +206,7 @@ class FileMerge:
                     conflict.sep4 = line
                     conflicts.append(conflict.build())
                     conflict = ConflictBuilder()
-                    file_bit.line_number = index + 1
+                    file_bit.line_number = line_number + 1
                 else:
                     conflict.right += line
                     line_num_right += 1
