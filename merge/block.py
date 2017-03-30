@@ -50,7 +50,7 @@ class Block:
                 return [Block(cursor.start, ch1.end), Block(cursor.start, ch2.end)]
         else:
             if ch1.is_compound:   # if {} ;
-                return [Block(ch1.start, ch1.end), Block(cursor.start, ch1.end)]
+                return [Block.from_cursor(ch1), Block(cursor.start, ch1.end)]
             else:                 # if ... ;
                 return [Block(cursor.start, ch1.end)]
 
@@ -62,7 +62,7 @@ class Block:
         ch = children[-1]
 
         if ch.is_compound:   # for(;;) {} ;
-            return [Block(ch.start, ch.end), Block(cursor.start, ch.end)]
+            return [Block.from_cursor(ch), Block(cursor.start, ch.end)]
         else:                # for(;;) ... ;
             return [Block(cursor.start, ch.end)]
 
@@ -74,6 +74,6 @@ class Block:
         ch = children[-1]
 
         if ch.is_compound:   # while(..) {} ;
-            return [Block(ch.start, ch.end), Block(cursor.start, ch.end)]
+            return [Block.from_cursor(ch), Block(cursor.start, ch.end)]
         else:                # while(..) ... ;
             return [Block(cursor.start, ch.end)]
