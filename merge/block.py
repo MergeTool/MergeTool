@@ -14,6 +14,17 @@ class Block:
         return Block(cursor.start, cursor.end)
 
     @staticmethod
+    def get_structure(cursor: Cursor):
+        if cursor.kind == CursorKind.IF_STMT:
+            return Block.structure_of_IF(cursor)
+        elif cursor.kind == CursorKind.FOR_STMT:
+            return Block.structure_of_FOR(cursor)
+        elif cursor.kind == CursorKind.COMPOUND_STMT:
+            return [Block.from_cursor(cursor)]
+        else:
+            raise ValueError("Unsupported cursor kind: " + cursor.kind.name)
+
+    @staticmethod
     def structure_of_IF(cursor: Cursor):  # -> [Block]
         assert cursor.kind == CursorKind.IF_STMT
 

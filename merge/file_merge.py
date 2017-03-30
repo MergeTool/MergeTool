@@ -77,12 +77,8 @@ class FileMerge:
         if not ast:
             return
 
-        if_statements = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
-        for_statements = FileMerge.extract_children(ast.cursor, [CursorKind.FOR_STMT])
-        # all_blocks = FileMerge.extract_children(ast.cursor, [CursorKind.COMPOUND_STMT])
-
-        blocks = [block for stmt in if_statements for block in Block.structure_of_IF(stmt)] + \
-                 [block for stmt in for_statements for block in Block.structure_of_FOR(stmt)]
+        statements = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT, CursorKind.FOR_STMT])
+        blocks = [block for stmt in statements for block in Block.get_structure(stmt)]
 
         # situation: `{ <<< } >>>`
         for block in blocks:
