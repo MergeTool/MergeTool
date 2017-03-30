@@ -403,13 +403,12 @@ class TestRefactorSingleBlock(TestCase):
 
         expected = multiline("""
                 int main() {
-                <<<<<<< HEAD
                     int i;
+                <<<<<<< HEAD
                     for(i = 0; i >
                         100; i--)
                         { int n = 0; }
                 =======
-                    int i;
                     for(i = 0; i >
                         100; i--)
                         { int x = 0; }

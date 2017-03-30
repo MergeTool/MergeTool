@@ -40,3 +40,15 @@ class Block:
                 return [Block(ch1.start, ch1.end), Block(cursor.start, ch1.end)]
             else:                 # if ... ;
                 return [Block(cursor.start, ch1.end)]
+
+    @staticmethod
+    def structure_of_FOR(cursor: Cursor):  # -> [Block]
+        assert cursor.kind == CursorKind.FOR_STMT
+
+        children = list(cursor.get_children())
+        ch = children[-1]
+
+        if ch.is_compound:   # for(;;) {} ;
+            return [Block(ch.start, ch.end), Block(cursor.start, ch.end)]
+        else:                # for(;;) ... ;
+            return [Block(cursor.start, ch.end)]
