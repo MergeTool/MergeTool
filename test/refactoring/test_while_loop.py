@@ -404,11 +404,11 @@ class TestRefactorSingleBlock(TestCase):
                     int i = 0;
                 <<<<<<< HEAD
                     while(i >
-                        100)
+                          100)
                         { int n = 0; }
                 =======
                     while(i >
-                        100)
+                          100)
                         { int x = 0; }
                 >>>>>>> master
                 }

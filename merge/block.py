@@ -19,6 +19,8 @@ class Block:
             return Block.structure_of_IF(cursor)
         elif cursor.kind == CursorKind.FOR_STMT:
             return Block.structure_of_FOR(cursor)
+        elif cursor.kind == CursorKind.WHILE_STMT:
+            return Block.structure_of_WHILE(cursor)
         elif cursor.kind == CursorKind.COMPOUND_STMT:
             return [Block.from_cursor(cursor)]
         else:
@@ -62,4 +64,16 @@ class Block:
         if ch.is_compound:   # for(;;) {} ;
             return [Block(ch.start, ch.end), Block(cursor.start, ch.end)]
         else:                # for(;;) ... ;
+            return [Block(cursor.start, ch.end)]
+
+    @staticmethod
+    def structure_of_WHILE(cursor: Cursor):  # -> [Block]
+        assert cursor.kind == CursorKind.WHILE_STMT
+
+        children = list(cursor.get_children())
+        ch = children[-1]
+
+        if ch.is_compound:   # while(..) {} ;
+            return [Block(ch.start, ch.end), Block(cursor.start, ch.end)]
+        else:                # while(..) ... ;
             return [Block(cursor.start, ch.end)]
