@@ -21,6 +21,11 @@ import sys
 import itertools
 from clang.cindex import CursorKind, Index, TranslationUnit, Cursor, conf, callbacks
 
+from merge import cursor_utils
+from merge.file_merge import FileMerge
+from io import StringIO
+from pathlib import Path
+
 
 def diag_info(diag):
     return {'severity': diag.severity,
@@ -93,9 +98,6 @@ Cursor.child = get_child
 
 
 def main():
-    from clang.cindex import Config
-    Config.set_library_file("/usr/local/opt/llvm/lib/libclang.dylib")
-
     path = "/Users/voddan/Programming/Parallels/MergeTool/prototype/~testproject/prog.cpp"
     ast = abstract_syntax_tree(path)
     root = ast.cursor
@@ -124,6 +126,36 @@ def main():
     print('\n')
 
 
+def multiline(text: str) -> str:
+    from textwrap import dedent
+    return dedent(text).strip()
+
+
+def test_ast():
+    print("ast test:")
+
+    code = multiline("""
+                    int main() {
+                        int n = 0;
+                        int x = 0;
+                        if(1 > 2)
+                            n = 1;
+                        else
+                            x = -1;
+                    }
+                    """)
+
+    file_merge = FileMerge.parse(Path("prog.c"), StringIO(code))
+    # file_merge.refactor_syntax_blocks()
+    ast = file_merge.abstract_syntax_tree()
+    if_statements = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
+
+    for stmt in FileMerge._get_children_recursive(ast.cursor):
+        print(stmt)
+
 
 if __name__ == '__main__':
-    main()
+    from merge.external_parser_setup import ExternalParserSetup
+    ExternalParserSetup.setup()
+
+    test_ast()

@@ -149,6 +149,27 @@ class TestNoRefactor(TestCase):
         refactored = file_merge.result()
         self.assertEqual(code, refactored)
 
+    def test_conflict_inside_if_block_3(self):
+        code = multiline("""
+        int main() {
+            if(1 >
+                 1 + 1) {
+        <<<<<<< HEAD
+                int n = 0;
+                n += 1;
+        =======
+                int x = 0;
+                x -= 3;
+        >>>>>>> master
+            }
+        }
+        """)
+
+        file_merge = FileMerge.parse(Path("prog.c"), StringIO(code))
+        file_merge.refactor_syntax_blocks()
+        refactored = file_merge.result()
+        self.assertEqual(code, refactored)
+
     def test_conflict_inside_else_block(self):
         code = multiline("""
         int main() {
@@ -257,6 +278,34 @@ class TestNoRefactor(TestCase):
                 x -= 3;
             } else {
                 printf("World!")
+            }
+        >>>>>>> master
+        }
+        """)
+
+        file_merge = FileMerge.parse(Path("prog.c"), StringIO(code))
+        file_merge.refactor_syntax_blocks()
+        refactored = file_merge.result()
+
+        self.assertEqual(code, refactored)
+
+    def test_conflict_outside_if_block_3(self):
+        code = multiline("""
+        int main()
+        {
+        <<<<<<< HEAD
+            if(1 <
+                1 + 1)
+            {
+                int n = 0;
+                n += 1;
+            }
+        =======
+            if(1 >
+                10 - 8)
+            {
+                int x = 0;
+                x -= 3;
             }
         >>>>>>> master
         }
@@ -443,15 +492,15 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    @skip("Unplanned functionality: raw if block")
-    def test_conflict_at_raw_if_end(self):
+    def test_conflict_at_if_block_end_4(self):
         code = multiline("""
                 int main() {
-                    if(1 > 2)
+                    if(1 >
+                        2)
                 <<<<<<< HEAD
-                        int n = 0;
+                        { int n = 0; }
                 =======
-                        int x = 0;
+                        { int x = 0; }
                 >>>>>>> master
                 }
                 """)
@@ -459,11 +508,78 @@ class TestRefactorSingleBlock(TestCase):
         expected = multiline("""
                 int main() {
                 <<<<<<< HEAD
+                    if(1 >
+                        2)
+                        { int n = 0; }
+                =======
+                    if(1 >
+                        2)
+                        { int x = 0; }
+                >>>>>>> master
+                }
+                """)
+
+        file_merge = FileMerge.parse(Path("prog.c"), StringIO(code))
+        file_merge.refactor_syntax_blocks()
+        refactored = file_merge.result()
+        self.assertEqual(expected, refactored)
+
+    def test_conflict_at_raw_if_end(self):
+        code = multiline("""
+                int main() {
+                    int n, x;
                     if(1 > 2)
-                        int n = 0;
+                <<<<<<< HEAD
+                        n = 0;
+                =======
+                        x = 0;
+                >>>>>>> master
+                }
+                """)
+
+        expected = multiline("""
+                int main() {
+                    int n, x;
+                <<<<<<< HEAD
+                    if(1 > 2)
+                        n = 0;
                 =======
                     if(1 > 2)
-                        int x = 0;
+                        x = 0;
+                >>>>>>> master
+                }
+                """)
+
+        file_merge = FileMerge.parse(Path("prog.c"), StringIO(code))
+        file_merge.refactor_syntax_blocks()
+        refactored = file_merge.result()
+        self.assertEqual(expected, refactored)
+
+    def test_conflict_at_raw_if_end_2(self):
+        code = multiline("""
+                int main() {
+                    int n, x;
+                    if(
+                        1 > 2)
+                <<<<<<< HEAD
+                        n = 0;
+                =======
+                        x = 0;
+                >>>>>>> master
+                }
+                """)
+
+        expected = multiline("""
+                int main() {
+                    int n, x;
+                <<<<<<< HEAD
+                    if(
+                        1 > 2)
+                        n = 0;
+                =======
+                    if(
+                        1 > 2)
+                        x = 0;
                 >>>>>>> master
                 }
                 """)
@@ -588,27 +704,99 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    @skip("Unplanned functionality: raw if block")
+    def test_conflict_at_if_block_start_4(self):
+        code = multiline("""
+                int main() {
+                <<<<<<< HEAD
+                    if(1 > 2
+                            ) {
+                =======
+                    if(1 < 2
+                        ) {
+                >>>>>>> master
+                        printf("Hello!")
+                    }
+                }
+                """)
+
+        expected = multiline("""
+                int main() {
+                <<<<<<< HEAD
+                    if(1 > 2
+                            ) {
+                        printf("Hello!")
+                    }
+                =======
+                    if(1 < 2
+                        ) {
+                        printf("Hello!")
+                    }
+                >>>>>>> master
+                }
+                """)
+
+        file_merge = FileMerge.parse(Path("prog.c"), StringIO(code))
+        file_merge.refactor_syntax_blocks()
+        refactored = file_merge.result()
+        self.assertEqual(expected, refactored)
+
     def test_conflict_at_raw_if_start(self):
         code = multiline("""
                    int main() {
+                       int x;
                    <<<<<<< HEAD
                        if(1 > 2)
                    =======
                        if(1 < 2)
                    >>>>>>> master
-                           int x = 0;
+                           x = 0;
                    }
                    """)
 
         expected = multiline("""
                    int main() {
+                       int x;
                    <<<<<<< HEAD
                        if(1 > 2)
-                           int x = 0;
+                           x = 0;
                    =======
                        if(1 < 2)
-                           int x = 0;
+                           x = 0;
+                   >>>>>>> master
+                   }
+                   """)
+
+        file_merge = FileMerge.parse(Path("prog.c"), StringIO(code))
+        file_merge.refactor_syntax_blocks()
+        refactored = file_merge.result()
+        self.assertEqual(expected, refactored)
+
+    def test_conflict_at_raw_if_start_2(self):
+        code = multiline("""
+                   int main() {
+                       int x;
+                   <<<<<<< HEAD
+                       if(1 >
+                       2)
+                   =======
+                       if(1 <
+                            2)
+                   >>>>>>> master
+                           x = 0;
+                   }
+                   """)
+
+        expected = multiline("""
+                   int main() {
+                       int x;
+                   <<<<<<< HEAD
+                       if(1 >
+                       2)
+                           x = 0;
+                   =======
+                       if(1 <
+                            2)
+                           x = 0;
                    >>>>>>> master
                    }
                    """)
@@ -994,33 +1182,34 @@ class TestRefactorIfElseBlocks(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    @skip("Unplanned functionality: raw if block")
     def test_conflict_at_raw_if_end(self):
         code = multiline("""
                 int main() {
+                    int n, x;
                     if(1 > 2)
                 <<<<<<< HEAD
-                        int n = 0;
+                        n = 0;
                 =======
-                        int x = 0;
+                        x = 0;
                 >>>>>>> master
                     else
-                        int x = -1;
+                        x = -1;
                 }
                 """)
 
         expected = multiline("""
                 int main() {
+                    int n, x;
                 <<<<<<< HEAD
                     if(1 > 2)
-                        int n = 0;
+                        n = 0;
                     else
-                        int x = -1;
+                        x = -1;
                 =======
                     if(1 > 2)
-                        int x = 0;
+                        x = 0;
                     else
-                        int x = -1;
+                        x = -1;
                 >>>>>>> master
                 }
                 """)
