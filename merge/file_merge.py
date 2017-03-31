@@ -77,10 +77,12 @@ class FileMerge:
         if not ast:
             return
 
-        if_statements = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT])
-        # all_blocks = FileMerge.extract_children(ast.cursor, [CursorKind.COMPOUND_STMT])
+        statements = FileMerge.extract_children(ast.cursor, [CursorKind.IF_STMT,
+                                                             CursorKind.FOR_STMT,
+                                                             CursorKind.WHILE_STMT,
+                                                             CursorKind.DO_STMT])
 
-        blocks = [block for stmt in if_statements for block in Block.structure_of_IF(stmt)]
+        blocks = [block for stmt in statements for block in Block.get_structure(stmt)]
 
         # situation: `{ <<< } >>>`
         for block in blocks:
@@ -136,6 +138,7 @@ class FileMerge:
     @staticmethod
     def parse(path: Path, stream: TextIOBase):  # -> FileMerge:
         """ Note that the number of the first line of a file is `1` """
+
         class State(Enum):
             text = 1
             left = 2

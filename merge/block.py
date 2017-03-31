@@ -14,6 +14,21 @@ class Block:
         return Block(cursor.start, cursor.end)
 
     @staticmethod
+    def get_structure(cursor: Cursor):
+        if cursor.kind == CursorKind.IF_STMT:
+            return Block.structure_of_IF(cursor)
+        elif cursor.kind == CursorKind.FOR_STMT:
+            return Block.structure_of_FOR(cursor)
+        elif cursor.kind == CursorKind.WHILE_STMT:
+            return Block.structure_of_WHILE(cursor)
+        elif cursor.kind == CursorKind.DO_STMT:
+            return Block.structure_of_DO_WHILE(cursor)
+        elif cursor.kind == CursorKind.COMPOUND_STMT:
+            return [Block.from_cursor(cursor)]
+        else:
+            raise ValueError("Unsupported cursor kind: " + cursor.kind.name)
+
+    @staticmethod
     def structure_of_IF(cursor: Cursor):  # -> [Block]
         assert cursor.kind == CursorKind.IF_STMT
 
@@ -37,6 +52,42 @@ class Block:
                 return [Block(cursor.start, ch1.end), Block(cursor.start, ch2.end)]
         else:
             if ch1.is_compound:   # if {} ;
-                return [Block(ch1.start, ch1.end), Block(cursor.start, ch1.end)]
+                return [Block.from_cursor(ch1), Block(cursor.start, ch1.end)]
             else:                 # if ... ;
                 return [Block(cursor.start, ch1.end)]
+
+    @staticmethod
+    def structure_of_FOR(cursor: Cursor):  # -> [Block]
+        assert cursor.kind == CursorKind.FOR_STMT
+
+        children = list(cursor.get_children())
+        ch = children[-1]
+
+        if ch.is_compound:   # for(;;) {} ;
+            return [Block.from_cursor(ch), Block(cursor.start, ch.end)]
+        else:                # for(;;) ... ;
+            return [Block(cursor.start, ch.end)]
+
+    @staticmethod
+    def structure_of_WHILE(cursor: Cursor):  # -> [Block]
+        assert cursor.kind == CursorKind.WHILE_STMT
+
+        children = list(cursor.get_children())
+        ch = children[-1]
+
+        if ch.is_compound:   # while(..) {} ;
+            return [Block.from_cursor(ch), Block(cursor.start, ch.end)]
+        else:                # while(..) ... ;
+            return [Block(cursor.start, ch.end)]
+
+    @staticmethod
+    def structure_of_DO_WHILE(cursor: Cursor):  # -> [Block]
+        assert cursor.kind == CursorKind.DO_STMT
+
+        children = list(cursor.get_children())
+        ch = children[0]
+
+        if ch.is_compound:   # do {} while(..);
+            return [Block.from_cursor(ch), Block(cursor.start, ch.end), Block.from_cursor(cursor)]
+        else:                # do ... while(..);
+            return [Block(cursor.start, ch.end), Block.from_cursor(cursor)]
