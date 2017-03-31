@@ -463,14 +463,14 @@ class TestRefactorIfAndWhile(TestCase):
                         n += 1;
                     }
 
-                    for(;1;) {
+                    while(1) {
                         int z = 10;
                 =======
                         int x = 0;
                         x -= 3;
                     }
 
-                    for(;2;)
+                    while(2)
                     {
                         int z = 20;
                 >>>>>>> master
@@ -488,7 +488,7 @@ class TestRefactorIfAndWhile(TestCase):
                         n += 1;
                     }
 
-                    for(;1;) {
+                    while(1) {
                         int z = 10;
                     }
                 =======
@@ -499,7 +499,7 @@ class TestRefactorIfAndWhile(TestCase):
                         x -= 3;
                     }
 
-                    for(;2;)
+                    while(2)
                     {
                         int z = 20;
                     }
@@ -512,10 +512,10 @@ class TestRefactorIfAndWhile(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_sequential_for_and_if(self):
+    def test_conflict_at_sequential_while_and_if(self):
         code = multiline("""
                 int main() {
-                    for(;0;) {
+                    while(0) {
                         printf("Hello!")
                 <<<<<<< HEAD
                         int n = 0;
@@ -540,7 +540,7 @@ class TestRefactorIfAndWhile(TestCase):
         expected = multiline("""
                 int main() {
                 <<<<<<< HEAD
-                    for(;0;) {
+                    while(0) {
                         printf("Hello!")
                         int n = 0;
                         n += 1;
@@ -550,7 +550,7 @@ class TestRefactorIfAndWhile(TestCase):
                         int z = 10;
                     }
                 =======
-                    for(;0;) {
+                    while(0) {
                         printf("Hello!")
                         int x = 0;
                         x -= 3;
@@ -569,10 +569,10 @@ class TestRefactorIfAndWhile(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_nested_if_in_for_ends(self):
+    def test_conflict_at_nested_if_in_while_ends(self):
         code = multiline("""
                 int main() {
-                    for(;;) {
+                    while(1) {
                         printf("Hello!")
                         if(True) {
                             int z;
@@ -593,7 +593,7 @@ class TestRefactorIfAndWhile(TestCase):
 
         expected = multiline("""
                 int main() {
-                    for(;;) {
+                    while(1) {
                         printf("Hello!")
                 <<<<<<< HEAD
                         if(True) {
@@ -619,10 +619,10 @@ class TestRefactorIfAndWhile(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_nested_if_in_for_ends_2(self):
+    def test_conflict_at_nested_if_in_while_ends_2(self):
         code = multiline("""
                 int main() {
-                    for(;;) {
+                    while(1) {
                         printf("Hello!")
                         if(True) {
                             int z;
@@ -645,7 +645,7 @@ class TestRefactorIfAndWhile(TestCase):
         expected = multiline("""
                 int main() {
                 <<<<<<< HEAD
-                    for(;;) {
+                    while(1) {
                         printf("Hello!")
                         if(True) {
                             int z;
@@ -655,7 +655,7 @@ class TestRefactorIfAndWhile(TestCase):
                         n += 1;
                     }
                 =======
-                    for(;;) {
+                    while(1) {
                         printf("Hello!")
                         if(True) {
                             int z;
@@ -673,7 +673,7 @@ class TestRefactorIfAndWhile(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_nested_for_in_if_ends(self):
+    def test_conflict_at_nested_while_in_if_ends(self):
         code = multiline("""
                 int main() {
                     if(1 > 2) {
@@ -723,7 +723,7 @@ class TestRefactorIfAndWhile(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_nested_for_in_if_ends_2(self):
+    def test_conflict_at_nested_while_in_if_ends_2(self):
         code = multiline("""
                 int main() {
                     if(1 > 2) {
@@ -777,7 +777,7 @@ class TestRefactorIfAndWhile(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_nested_if_in_for_starts(self):
+    def test_conflict_at_nested_if_in_while_starts(self):
         code = multiline("""
                 int main() {
                 <<<<<<< HEAD
@@ -829,7 +829,7 @@ class TestRefactorIfAndWhile(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_nested_for_in_if_starts(self):
+    def test_conflict_at_nested_while_in_if_starts(self):
         code = multiline("""
                 int main() {
                 <<<<<<< HEAD
