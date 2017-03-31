@@ -16,7 +16,7 @@ class TestNoRefactor(TestCase):
         from merge.external_parser_setup import ExternalParserSetup
         ExternalParserSetup.setup()
 
-    def test_conflict_after_raw_for(self):
+    def test_conflict_after_raw_while(self):
         code = multiline("""
         int main() {
             while(1)
@@ -36,7 +36,7 @@ class TestNoRefactor(TestCase):
         refactored = file_merge.result()
         self.assertEqual(code, refactored)
 
-    def test_conflict_after_for_block(self):
+    def test_conflict_after_while_block(self):
         code = multiline("""
         int main() {
             while(1 > 2) {
@@ -57,7 +57,7 @@ class TestNoRefactor(TestCase):
         refactored = file_merge.result()
         self.assertEqual(code, refactored)
 
-    def test_conflict_before_for_block(self):
+    def test_conflict_before_while_block(self):
         code = multiline("""
         int main() {
         <<<<<<< HEAD
@@ -78,7 +78,7 @@ class TestNoRefactor(TestCase):
         refactored = file_merge.result()
         self.assertEqual(code, refactored)
 
-    def test_conflict_before_for_block_2(self):
+    def test_conflict_before_while_block_2(self):
         code = multiline("""
         int main() {
         <<<<<<< HEAD
@@ -101,7 +101,7 @@ class TestNoRefactor(TestCase):
         refactored = file_merge.result()
         self.assertEqual(code, refactored)
 
-    def test_conflict_inside_for_block(self):
+    def test_conflict_inside_while_block(self):
         code = multiline("""
         int main() {
             while(1) {
@@ -121,7 +121,7 @@ class TestNoRefactor(TestCase):
         refactored = file_merge.result()
         self.assertEqual(code, refactored)
 
-    def test_conflict_inside_for_block_2(self):
+    def test_conflict_inside_while_block_2(self):
         code = multiline("""
         int main()
         {
@@ -143,7 +143,7 @@ class TestNoRefactor(TestCase):
         refactored = file_merge.result()
         self.assertEqual(code, refactored)
 
-    def test_conflict_inside_for_block_3(self):
+    def test_conflict_inside_while_block_3(self):
         code = multiline("""
         int main() {
             while(1 >
@@ -164,7 +164,7 @@ class TestNoRefactor(TestCase):
         refactored = file_merge.result()
         self.assertEqual(code, refactored)
 
-    def test_conflict_outside_for_block(self):
+    def test_conflict_outside_while_block(self):
         code = multiline("""
         int main()
         {
@@ -190,7 +190,7 @@ class TestNoRefactor(TestCase):
 
         self.assertEqual(code, refactored)
 
-    def test_conflict_outside_for_block_2(self):
+    def test_conflict_outside_while_block_2(self):
         code = multiline("""
         int main() {
         <<<<<<< HEAD
@@ -213,7 +213,7 @@ class TestNoRefactor(TestCase):
 
         self.assertEqual(code, refactored)
 
-    def test_conflict_outside_for_block_3(self):
+    def test_conflict_outside_while_block_3(self):
         code = multiline("""
         int main()
         {
@@ -241,7 +241,7 @@ class TestNoRefactor(TestCase):
 
         self.assertEqual(code, refactored)
 
-    def test_conflict_outside_raw_for(self):
+    def test_conflict_outside_raw_while(self):
         code = multiline("""
         int main()
         {
@@ -267,7 +267,7 @@ class TestRefactorSingleBlock(TestCase):
         from merge.external_parser_setup import ExternalParserSetup
         ExternalParserSetup.setup()
 
-    def test_conflict_at_for_block_end(self):
+    def test_conflict_at_while_block_end(self):
         code = multiline("""
                 int main() {
                     while(1) {
@@ -307,7 +307,7 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_for_block_end_2(self):
+    def test_conflict_at_while_block_end_2(self):
         code = multiline("""
                 int main()
                 {
@@ -356,7 +356,7 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_for_block_end_3(self):
+    def test_conflict_at_while_block_end_3(self):
         code = multiline("""
                 int main() {
                     while(1)
@@ -385,7 +385,7 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_for_block_end_4(self):
+    def test_conflict_at_while_block_end_4(self):
         code = multiline("""
                 int main() {
                     int i = 0;
@@ -419,7 +419,7 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_raw_for_end(self):
+    def test_conflict_at_raw_while_end(self):
         code = multiline("""
                 int main() {
                     int n, x;
@@ -450,7 +450,7 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_raw_for_end_2(self):
+    def test_conflict_at_raw_while_end_2(self):
         code = multiline("""
                 int main() {
                     int n, x;
@@ -484,7 +484,7 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_for_block_start(self):
+    def test_conflict_at_while_block_start(self):
         code = multiline("""
                 int main() {
                 <<<<<<< HEAD
@@ -521,7 +521,7 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_for_block_start_2(self):
+    def test_conflict_at_while_block_start_2(self):
         code = multiline("""
                 int main()
                 {
@@ -567,7 +567,7 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_for_block_start_3(self):
+    def test_conflict_at_while_block_start_3(self):
         code = multiline("""
                 int main() {
                 <<<<<<< HEAD
@@ -599,7 +599,7 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_for_block_start_4(self):
+    def test_conflict_at_while_block_start_4(self):
         code = multiline("""
                 int main() {
                 <<<<<<< HEAD
@@ -635,7 +635,7 @@ class TestRefactorSingleBlock(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_raw_for_start(self):
+    def test_conflict_at_raw_while_start(self):
         code = multiline("""
                    int main() {
                        int x;
@@ -673,7 +673,7 @@ class TestRefactorMultipleBlocks(TestCase):
         from merge.external_parser_setup import ExternalParserSetup
         ExternalParserSetup.setup()
 
-    def test_conflict_at_2_sequential_for_blocks(self):
+    def test_conflict_at_2_sequential_while_blocks(self):
         code = multiline("""
                 int main() {
                     while(0)
@@ -731,7 +731,7 @@ class TestRefactorMultipleBlocks(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_2_nested_for_blocks_ends(self):
+    def test_conflict_at_2_nested_while_blocks_ends(self):
         code = multiline("""
                 int main() {
                     while(0) {
@@ -781,7 +781,7 @@ class TestRefactorMultipleBlocks(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_2_nested_for_blocks_ends_2(self):
+    def test_conflict_at_2_nested_while_blocks_ends_2(self):
         code = multiline("""
                 int main() {
                     while(1) {
@@ -835,7 +835,7 @@ class TestRefactorMultipleBlocks(TestCase):
         refactored = file_merge.result()
         self.assertEqual(expected, refactored)
 
-    def test_conflict_at_2_nested_for_blocks_starts(self):
+    def test_conflict_at_2_nested_while_blocks_starts(self):
         code = multiline("""
                 int main() {
                 <<<<<<< HEAD
