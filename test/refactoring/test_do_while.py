@@ -285,7 +285,7 @@ class TestRefactorSingleBlock(TestCase):
                 =======
                         int x = 0;
                         x -= 3;
-                    } while(1);
+                    } while(2);
                 >>>>>>> master
                 }
                 """)
@@ -300,10 +300,10 @@ class TestRefactorSingleBlock(TestCase):
                     } while(1);
                 =======
                     do {
-                        printf("Hello!")
+                        printf("Hello!");
                         int x = 0;
                         x -= 3;
-                    } while(1);
+                    } while(2);
                 >>>>>>> master
                 }
                 """)
@@ -443,6 +443,7 @@ class TestRefactorSingleBlock(TestCase):
                     do
                         n = 0;
                 =======
+                    do
                         x = 0;
                 >>>>>>> master
                     while(1);
@@ -735,15 +736,14 @@ class TestRefactorMultipleBlocks(TestCase):
 
                     do {
                         int z = 10;
-                    } while(1);
+                    } while(2);
                 =======
                     do
                     {
                         printf("Hello!")
                         int x = 0;
                         x -= 3;
-                    }
-                    while(0);
+                    } while(1);
 
                     do {
                         int z = 20;
@@ -816,16 +816,16 @@ class TestRefactorMultipleBlocks(TestCase):
                             int z;
                 <<<<<<< HEAD
                             z = 10;
-                        } while(2);
+                        } while(3);
                         int n = 0;
                         n += 1;
-                    }
+                    } while(4);
                 =======
                             z = 20;
                         } while(2);
                         int x = 0;
                         x -= 3;
-                    }  while(1);
+                    } while(1);
                 >>>>>>> master
                 }
                 """)
@@ -838,10 +838,10 @@ class TestRefactorMultipleBlocks(TestCase):
                         do {
                             int z;
                             z = 10;
-                        } while(2);
+                        } while(3);
                         int n = 0;
                         n += 1;
-                    } while(1);
+                    } while(4);
                 =======
                     do {
                         printf("Hello!")

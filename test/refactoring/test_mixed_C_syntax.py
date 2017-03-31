@@ -904,7 +904,7 @@ class TestRefactorIfAndDoWhile(TestCase):
                 =======
                         int x = 0;
                         x -= 3;
-                    } while(1);
+                    }
 
                     do
                     {
@@ -927,7 +927,8 @@ class TestRefactorIfAndDoWhile(TestCase):
 
                     do {
                         int z = 10;
-                    } while(1);
+                    }
+                    while(2);
                 =======
                     if(1 > 2)
                     {
@@ -965,7 +966,7 @@ class TestRefactorIfAndDoWhile(TestCase):
                 =======
                         int x = 0;
                         x -= 3;
-                    }
+                    } while(1);
 
                     if(1 > 2)
                     {
@@ -992,7 +993,7 @@ class TestRefactorIfAndDoWhile(TestCase):
                         printf("Hello!")
                         int x = 0;
                         x -= 3;
-                    } while(0);
+                    } while(1);
 
                     if(1 > 2)
                     {
